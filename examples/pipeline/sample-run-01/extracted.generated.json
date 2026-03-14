@@ -1,0 +1,12 @@
+{
+  "schema_version": "prunemem.extracted.v1",
+  "memory_id": "mem-example-001",
+  "facts": [
+    {
+      "fact_id": "fact-001",
+      "fact_type": "preference",
+      "text": "Memory should be layered by signal and retrieval cost."
+    }
+  ],
+  "note": "mock extract output"
+}

@@ -1,0 +1,8 @@
+{
+  "memory_id": "mem-example-001",
+  "files": [
+    { "filePath": "examples/layers/l1/mem-example-001.md" },
+    { "filePath": "examples/pipeline/sample-run-01/apply.json" }
+  ],
+  "violations": []
+}

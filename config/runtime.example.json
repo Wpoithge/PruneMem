@@ -1,0 +1,12 @@
+{
+  "paths": {
+    "workspace": "./examples/workspace",
+    "registryDir": "./examples/registry",
+    "pipelineDir": "./examples/pipeline",
+    "layersDir": "./examples/layers"
+  },
+  "hooks": {
+    "archiveOnNew": true,
+    "archiveOnReset": true
+  }
+}

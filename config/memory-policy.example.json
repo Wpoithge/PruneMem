@@ -1,0 +1,12 @@
+{
+  "runtimePolicy": {
+    "applyTargets": ["L1"],
+    "allowMemoryMdWrites": false,
+    "allowDailyNoteWrites": false
+  },
+  "maintenance": {
+    "enableCuratorApply": true,
+    "enableSourceRepair": true,
+    "strictValidation": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "memory_id": "mem-example-001",
+  "result": {
+    "items": [
+      {
+        "fact_id": "fact-001",
+        "memory_class": "long_term_preference",
+        "topic_key": "example.preference.memory-layering",
+        "dedupe_key": "pref:memory:layering",
+        "lifecycle": "persistent",
+        "target_layers": [
+          "L1"
+        ],
+        "canonical_summary": "Layer memory by signal and retrieval cost."
+      }
+    ]
+  },
+  "note": "mock judge output"
+}
