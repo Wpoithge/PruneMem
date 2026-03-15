@@ -18,33 +18,50 @@ It packages a structured memory system that combines:
 
 ## Why PruneMem
 
-As agent memory grows, three problems show up quickly:
+As agent memory grows, several failure modes show up quickly:
 
-1. **Search-only memory becomes noisy**  
-   A single retrieval backend eventually becomes slow, imprecise, and expensive.
-2. **Flat memory lacks structure**  
-   Useful memory needs layers and guided retrieval paths, not one giant store.
-3. **Real-world knowledge changes over time**  
-   Memory must support lifecycle governance, not append-only accumulation.
+1. **Memory retrieval gets noisy**  
+   As more items accumulate, search results become less precise, more repetitive, and more expensive to use well.
 
-PruneMem is meant to solve those problems together with a structure-first, lifecycle-aware design.
+2. **Flat memory has no operating structure**  
+   Not every memory should be stored, retrieved, or maintained the same way. Systems need layers, not one undifferentiated pool.
+
+3. **Memory changes over time**  
+   Some items should be merged, some superseded, some expired, and some kept stable. Append-only memory is not enough.
+
+4. **Retrieval alone does not tell the system what is canonical**  
+   Search can find candidate memories, but it does not by itself explain which memory is active, duplicated, outdated, or part of a larger topic state.
+
+PruneMem is designed to address those problems together: structured layers for storage and retrieval, registries for memory state, and lifecycle-aware maintenance for memory that evolves over time.
 
 ## What PruneMem is
 
-This repository is an **open-source plugin / productized implementation** of a structured memory system.
+PruneMem is an open-source, structured memory layer for OpenClaw-style agents.
 
-It is **not**:
-- a dump of any private workspace
-- a copy of personal memory files
-- a bundle of private chat logs or production registries
+It is designed as a public and portable system for:
+- layered memory organization
+- registry-governed memory state
+- lifecycle-aware maintenance
+- pluggable retrieval and model integrations
 
-It **does** include:
+It is not a dump of any private workspace, personal memory archive, or production agent state.
+
+## What this repository includes
+
+This repository includes:
 - public architecture and schema docs
 - portable governance scripts
-- example configs
-- synthetic/sanitized fixtures
+- example configurations
+- synthetic example data
 - sample pipeline assets
 - regression checks
+
+It does not include:
+- private memory files
+- personal notes
+- private chat logs
+- production registry exports
+- machine-specific secret configuration
 
 ## Current v0.1 capabilities
 
