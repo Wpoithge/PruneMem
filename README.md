@@ -4,10 +4,17 @@ PruneMem is a layered, lifecycle-aware memory plugin for OpenClaw-style agents.
 
 It packages a structured memory system that combines:
 
-- **Layered memory organization** (`L0/L1/L2/L3`)
-- **Registry-driven governance** (`topic`, `dedupe`, `lifecycle`, `memory` registries)
-- **Lifecycle-aware maintenance** (merge, supersede, expire, normalize, validate, repair)
-- **Pluggable adapters** for retrieval backends and model providers
+- **Layered memory organization** (`L0/L1/L2/L3`)  
+  Store memory by signal strength, persistence, and retrieval cost, so the system can read more selectively instead of treating everything as one flat memory pool.
+
+- **Registry-driven governance** (`topic`, `dedupe`, `lifecycle`, `memory` registries)  
+  Keep explicit records of what each memory means, which item is canonical, how related items are grouped, and what state each memory is in — instead of relying only on retrieval search.
+
+- **Lifecycle-aware maintenance** (merge, supersede, expire, normalize, validate, repair)  
+  Let memory evolve over time: duplicates can be merged, outdated items can be superseded or expired, and the whole memory state can be checked and repaired.
+
+- **Pluggable adapters** for retrieval backends and model providers  
+  Keep retrieval and model calls replaceable, so PruneMem is not locked to one backend, one embedding stack, or one model vendor.
 
 ## Why PruneMem
 
@@ -50,6 +57,8 @@ PruneMem v0.1 currently exposes five core capability groups:
 5. **Pluggable retrieval/model adapter architecture**
 
 These are the first-release guarantees, not the final limit of the project.
+
+In PruneMem, registries are part of the memory state, not just helper indexes. They track topic grouping, deduplication/canonical status, lifecycle state, and memory records so the system can maintain memory deliberately rather than only retrieve it.
 
 ## Architecture at a glance
 
