@@ -245,15 +245,23 @@ PruneMem/
 - `docs/configuration.md`
 - `docs/faq.md`
 
-## Planned next areas
+## Likely v0.2.0 priorities
 
-Likely next follow-up work includes:
+Likely v0.2.0 priorities include:
 - richer live-provider execution support
 - stronger schema validation
 - better runtime integration helpers
+- broader CI and fixture coverage
+
+These improvements are aimed at making the public release easier to run, easier to validate, and more practical for real experimentation. They should not be read as a claim that the public repo already reproduces the full private production runtime.
+
+## Longer-term follow-up areas
+
+Longer-term follow-up areas may include:
 - more retrieval backends beyond file + optional QMD
 - more complete migration helpers
-- broader CI and fixture coverage
+- richer diagnostics and inspection tooling
+- broader live-provider validation coverage
 
 ## License
 
