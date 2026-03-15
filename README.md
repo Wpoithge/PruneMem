@@ -63,17 +63,9 @@ It does not include:
 - production registry exports
 - machine-specific secret configuration
 
-## Current v0.1 capabilities
+## Current release status
 
-PruneMem v0.1 currently exposes five core capability groups:
-
-1. **Layered memory model** (`L0/L1/L2/L3`)
-2. **Archive → extract → judge → registry pipeline**
-3. **Registry-driven lifecycle governance**
-4. **Maintenance, validation, and repair flows**
-5. **Pluggable retrieval/model adapter architecture**
-
-These are the first-release guarantees, not the final limit of the project.
+PruneMem v0.1.0 is a public foundation release. It already exposes the core layered-memory, registry-governed, and runnable mock-pipeline structure, but it does not yet reproduce the full private production runtime.
 
 In PruneMem, registries are part of the memory state, not just helper indexes. They track topic grouping, deduplication/canonical status, lifecycle state, and memory records so the system can maintain memory deliberately rather than only retrieve it.
 
@@ -118,6 +110,8 @@ bash scripts/run-checks.sh
 ```
 
 If this passes, the repository is internally consistent enough for first exploration.
+
+This quick start validates the public demo pipeline and repository wiring. It does not yet provide a full production-style OpenClaw runtime integration equivalent to a private Memory V3 deployment.
 
 Current checks cover:
 - registry consistency
@@ -166,6 +160,8 @@ When you want real model calls:
 1. copy and edit the backend config
 2. set the provider API key in your environment
 3. run extract/judge without `--mock`
+
+Real-provider execution is available for early testing in v0.1.0, but this path should not yet be treated as fully validated production-grade integration.
 
 Example config direction:
 
