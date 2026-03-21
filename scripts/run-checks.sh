@@ -16,14 +16,17 @@ node tests/regression/check-l1-only-policy.js
 echo "[4/8] regression: provider config"
 node tests/regression/check-provider-config.js
 
-echo "[5/8] regression: provider error normalization"
+echo "[5/9] regression: provider error normalization"
 node tests/regression/check-provider-error-normalization.js
 
-echo "[6/8] regression: CLI validation"
+echo "[6/9] regression: openai-compatible normalization"
+node tests/regression/check-openai-compatible-normalization.js
+
+echo "[7/9] regression: CLI validation"
 node tests/regression/check-cli-validation.js
 
-echo "[7/8] regression: sample pipeline (mock)"
+echo "[8/9] regression: sample pipeline (mock)"
 node tests/regression/check-sample-pipeline.js
 
-echo "[8/8] maintain entry"
+echo "[9/9] maintain entry"
 node src/core/maintain.js --workspace "$ROOT" --strict
