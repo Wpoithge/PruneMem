@@ -1,0 +1,12 @@
+{
+  "schema_version": "prunemem.milestone-state.v1",
+  "memory_version": "v4.1",
+  "session_key": "agent:demo:main",
+  "current_milestone_id": "m2",
+  "current_milestone_title": "Implement public docs, examples, and runtime helpers",
+  "completed_milestone_ids": [
+    "m1"
+  ],
+  "status": "in_progress",
+  "updated_at": "2026-04-12T01:53:07.224Z"
+}

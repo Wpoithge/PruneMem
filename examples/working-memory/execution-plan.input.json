@@ -1,0 +1,27 @@
+{
+  "session_key": "agent:demo:main",
+  "plan_title": "PruneMem V4.1 public release",
+  "goal": "Ship safe working-memory and execution-context abstractions.",
+  "milestones": [
+    {
+      "id": "m1",
+      "title": "Audit baseline and identify safe V4/V4.1 features",
+      "status": "done"
+    },
+    {
+      "id": "m2",
+      "title": "Implement public docs, examples, and runtime helpers",
+      "status": "in_progress"
+    },
+    {
+      "id": "m3",
+      "title": "Run checks and prepare release summary",
+      "status": "pending"
+    }
+  ],
+  "reporting_policy": {
+    "report_on_milestone": true,
+    "report_every_minutes_without_milestone": 15,
+    "continue_after_interim_report": true
+  }
+}

@@ -1,35 +1,52 @@
 # Layers and Lifecycle
 
-PruneMem combines two ideas into one public system:
+PruneMem now combines three ideas into one public system:
 
-- **layered memory structure** for guided retrieval
+- **layered long-term memory** for guided retrieval
 - **lifecycle-aware governance** for correction over time
+- **working/execution context layers** for active task continuity
 
-## Layer roles
+## Long-term layer roles
 
 ### L0
 Highest-signal distilled summaries.
 
 ### L1
-Canonical operational memory layer. This is the current default public write target.
+Canonical operational long-term memory layer. This is still the default public write target.
 
 ### L2
-Richer supporting memory context.
+Richer supporting long-term context.
 
 ### L3
 Raw or near-raw source detail, useful for audit and recovery.
 
-## Main-session visible memory boundary
+## Runtime-only layers added in V4 / V4.1
 
-A public memory system should separate:
-- concise stable memory visible to the main runtime
-- richer supporting detail stored in lower layers or source artifacts
+### Working memory
+Session-scoped state that should remain mutable and resumable.
 
-This avoids loading too much raw history into the main agent context.
+### Runtime context
+Compact text/context block compiled from working memory for the next turn.
+
+### Execution/progress context
+Optional V4.1 layer that explains plan state, current milestone, and reporting cadence.
+
+### Session archive
+Frozen snapshot captured when a session closes or is archived.
+
+## Why these are separate
+
+A public memory system should not collapse everything into one store.
+
+- **long-term memory** is durable, governed, and retrieval-oriented
+- **working memory** is mutable, task-hot, and short-horizon
+- **runtime context** is compact and turn-oriented
+- **execution context** is plan/progress-oriented
+- **session archives** preserve closed-session evidence and resume state
 
 ## Lifecycle model
 
-Memory is not append-only. A later fact may revise, replace, narrow, or invalidate an earlier one.
+Long-term memory is not append-only. A later fact may revise, replace, narrow, or invalidate an earlier one.
 
 PruneMem therefore supports lifecycle handling such as:
 - insert
@@ -40,24 +57,18 @@ PruneMem therefore supports lifecycle handling such as:
 - repair
 - validate
 
-## Governance principles
-
-- preserve history instead of silently erasing it
-- keep registry state queryable and machine-readable
-- prefer deterministic maintenance over opaque post-hoc repair
-- restrict automatic merge behavior to low-risk cases
+Working memory also evolves, but by a different rule set:
+- append/update active state
+- move steps from `in_progress` to `completed`
+- clear/replace blockers
+- refresh next actions
+- surface candidate long-term memories without committing them automatically
 
 ## Current public default
 
-The public example policy keeps runtime writes conservative:
+The public example policy keeps long-term runtime writes conservative:
 - apply target defaults to `L1`
 - summary/reference layers can still exist structurally
-- broader writes should be opt-in through policy
+- broader writes remain opt-in through policy
 
-## Publicization constraints
-
-Compared with a private production workspace, the open-source plugin must:
-- avoid private path assumptions
-- avoid private channel routing assumptions
-- avoid provider lock-in
-- expose config and adapter interfaces instead of machine-specific wiring
+At the same time, V4/V4.1 working-memory artifacts are now publicly documented and demonstrated through sanitized examples.

@@ -3,10 +3,14 @@
     "workspace": "./examples/workspace",
     "registryDir": "./examples/registry",
     "pipelineDir": "./examples/pipeline",
-    "layersDir": "./examples/layers"
+    "layersDir": "./examples/layers",
+    "workingMemoryDir": "./examples/working-memory"
   },
   "hooks": {
     "archiveOnNew": true,
-    "archiveOnReset": true
+    "archiveOnReset": true,
+    "preTurnRuntimeContext": true,
+    "postTurnWorkingState": true,
+    "sessionCloseArchive": true
   }
 }

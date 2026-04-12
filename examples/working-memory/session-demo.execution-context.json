@@ -1,0 +1,58 @@
+{
+  "schema_version": "prunemem.runtime-context.v1",
+  "memory_version": "v4.1",
+  "session_key": "agent:demo:main",
+  "generated_at": "2026-04-12T01:53:07.224Z",
+  "content": "[Execution Plan]\nPruneMem V4.1 public release\nGoal: Ship safe working-memory and execution-context abstractions.\nCurrent milestone: Implement public docs, examples, and runtime helpers\nCompleted milestones: Audit baseline and identify safe V4/V4.1 features\nPending milestones: Run checks and prepare release summary\nInterim report cadence: every 15 minutes",
+  "plan": {
+    "schema_version": "prunemem.execution-plan.v1",
+    "memory_version": "v4.1",
+    "session_key": "agent:demo:main",
+    "plan_title": "PruneMem V4.1 public release",
+    "goal": "Ship safe working-memory and execution-context abstractions.",
+    "status": "active",
+    "reporting_policy": {
+      "report_on_milestone": true,
+      "report_every_minutes_without_milestone": 15,
+      "continue_after_interim_report": true
+    },
+    "milestones": [
+      {
+        "id": "m1",
+        "title": "Audit baseline and identify safe V4/V4.1 features",
+        "status": "done",
+        "notes": null,
+        "updated_at": "2026-04-12T01:53:07.223Z"
+      },
+      {
+        "id": "m2",
+        "title": "Implement public docs, examples, and runtime helpers",
+        "status": "in_progress",
+        "notes": null,
+        "updated_at": "2026-04-12T01:53:07.224Z"
+      },
+      {
+        "id": "m3",
+        "title": "Run checks and prepare release summary",
+        "status": "pending",
+        "notes": null,
+        "updated_at": "2026-04-12T01:53:07.224Z"
+      }
+    ],
+    "created_at": "2026-04-12T01:53:07.224Z",
+    "updated_at": "2026-04-12T01:53:07.224Z",
+    "last_reported_at": null
+  },
+  "milestone_state": {
+    "schema_version": "prunemem.milestone-state.v1",
+    "memory_version": "v4.1",
+    "session_key": "agent:demo:main",
+    "current_milestone_id": "m2",
+    "current_milestone_title": "Implement public docs, examples, and runtime helpers",
+    "completed_milestone_ids": [
+      "m1"
+    ],
+    "status": "in_progress",
+    "updated_at": "2026-04-12T01:53:07.224Z"
+  }
+}

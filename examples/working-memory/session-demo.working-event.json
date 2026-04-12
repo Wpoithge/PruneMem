@@ -1,0 +1,47 @@
+{
+  "schema_version": "prunemem.working-event.v1",
+  "memory_version": "v4.1",
+  "session_key": "agent:demo:main",
+  "trigger": "hook:post-turn",
+  "summary": "Updated working memory after a repository upgrade turn.",
+  "state_delta": {
+    "status": "active",
+    "constraints_added": [
+      "Do not leak private logs, keys, machine-specific paths, or real workspace details.",
+      "Prefer generalized hook contracts over internal event copies."
+    ],
+    "decisions_confirmed_added": [
+      "Keep long-term memory separate from working memory.",
+      "Document V4 and V4.1 as layered runtime abstractions."
+    ],
+    "in_progress_steps_added": [
+      "Update docs, examples, and changelog for public V4.1 release."
+    ],
+    "completed_steps_added": [
+      "Audit repository baseline and inspect private references for safe abstractions."
+    ],
+    "next_actions_set": [
+      "Run repository checks.",
+      "Write release summary to output-last-message."
+    ],
+    "open_questions_added": [
+      "Should the public release include stricter JSON Schema files next?"
+    ],
+    "blocked_items_set": [],
+    "candidate_long_term_memories_added": [
+      {
+        "memory_class": "long_term_decision",
+        "canonical_summary": "PruneMem public releases must keep working memory and long-term memory explicitly separated.",
+        "target_layers": [
+          "L1"
+        ]
+      }
+    ],
+    "last_user_intent": "Ship a public-safe repository update that explains V4.1 clearly.",
+    "last_agent_action_summary": "Drafted working-memory, runtime-context, and archive relationship materials.",
+    "related_archives_added": [
+      "archive:demo-session-20260318"
+    ]
+  },
+  "recorded_at": "2026-04-12T01:53:50.986Z"
+}

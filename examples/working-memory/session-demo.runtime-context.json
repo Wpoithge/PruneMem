@@ -1,0 +1,8 @@
+{
+  "schema_version": "prunemem.runtime-context.v1",
+  "memory_version": "v4.1",
+  "session_key": "agent:demo:main",
+  "status": "active",
+  "generated_at": "2026-04-12T01:53:50.987Z",
+  "content": "[Task]\nUpgrade PruneMem public repo to express V4.1\n\n[Goal]\nFinish a public-safe repository release without leaking private runtime details.\n\n[User Request]\nPublicly document and ship the safe V4/V4.1 abstractions.\n\n[Last User Intent]\nShip a public-safe repository update that explains V4.1 clearly.\n\n[Constraints]:\n- Do not leak private logs, keys, machine-specific paths, or real workspace details.\n- Prefer generalized hook contracts over internal event copies.\n\n[Decisions Confirmed]:\n- Keep long-term memory separate from working memory.\n- Document V4 and V4.1 as layered runtime abstractions.\n\n[In Progress]:\n- Update docs, examples, and changelog for public V4.1 release.\n\n[Next Actions]:\n- Run repository checks.\n- Write release summary to output-last-message.\n\n[Open Questions]:\n- Should the public release include stricter JSON Schema files next?\n\n[Completed]:\n- Audit repository baseline and inspect private references for safe abstractions.\n\n[Last Agent Action]\nDrafted working-memory, runtime-context, and archive relationship materials."
+}

@@ -4,6 +4,16 @@
     "allowMemoryMdWrites": false,
     "allowDailyNoteWrites": false
   },
+  "workingMemory": {
+    "enabled": true,
+    "clearCompletedFromInProgress": true,
+    "clearResolvedQuestions": true,
+    "runtimeContextMaxChars": 1600
+  },
+  "executionContext": {
+    "enabled": true,
+    "reportEveryMinutesWithoutMilestone": 10
+  },
   "maintenance": {
     "enableCuratorApply": true,
     "enableSourceRepair": true,

@@ -2,271 +2,214 @@
 
 PruneMem is a layered, lifecycle-aware memory plugin for OpenClaw-style agents.
 
-It packages a structured memory system that combines:
+It packages a public-safe memory system that combines:
 
-- **Layered memory organization** (`L0/L1/L2/L3`)  
-  Store memory by signal strength, persistence, and retrieval cost, so the system can read more selectively instead of treating everything as one flat memory pool.
+- **Layered long-term memory** (`L0/L1/L2/L3`) for selective retrieval
+- **Registry-governed lifecycle maintenance** for merge / supersede / expire / validate / repair
+- **Working memory and runtime context** for active session continuity
+- **Hook-oriented integration contracts** for archive, pre-turn context assembly, and post-turn progress capture
+- **Pluggable retrieval/model adapters** instead of hard-coded vendor lock-in
 
-- **Registry-driven governance** (`topic`, `dedupe`, `lifecycle`, `memory` registries)  
-  Keep explicit records of what each memory means, which item is canonical, how related items are grouped, and what state each memory is in — instead of relying only on retrieval search.
+## Release status
 
-- **Lifecycle-aware maintenance** (merge, supersede, expire, normalize, validate, repair)  
-  Let memory evolve over time: duplicates can be merged, outdated items can be superseded or expired, and the whole memory state can be checked and repaired.
+**Current package version: `0.2.0`**
 
-- **Pluggable adapters** for retrieval backends and model providers  
-  Keep retrieval and model calls replaceable, so PruneMem is not locked to one backend, one embedding stack, or one model vendor.
+`0.1.0` was the public foundation release built around the public Memory V3 baseline.
+
+`0.2.0` upgrades the repository so it can publicly express the architecture through **Memory V4.1** while staying inside open-source safety boundaries.
+
+That means this repository now documents and demonstrates:
+
+- V3 long-term memory governance
+- V4 per-session working memory
+- V4 runtime-context assembly
+- V4 generic hook integration contracts
+- V4.1 execution/progress context
+- V4.1 session/archive relationship and resume-oriented archive snapshots
+
+It still **does not** include:
+
+- private workspace data
+- personal or production chat logs
+- private prompts/logs copied from internal deployments
+- secrets, keys, accounts, or machine-specific paths
+- tightly coupled runtime wiring copied 1:1 from a private host
 
 ## Why PruneMem
 
 As agent memory grows, several failure modes show up quickly:
 
-1. **Memory retrieval gets noisy**  
-   As more items accumulate, search results become less precise, more repetitive, and more expensive to use well.
+1. **Retrieval gets noisy**
+2. **Flat memory lacks operating structure**
+3. **Memory changes over time**
+4. **Session continuity needs more than long-term memory alone**
+5. **Long-running tasks need explicit progress state, not only chat history**
 
-2. **Flat memory has no operating structure**  
-   Not every memory should be stored, retrieved, or maintained the same way. Systems need layers, not one undifferentiated pool.
+PruneMem addresses those problems with layered memory, explicit registries, lifecycle governance, and now a public working-memory/runtime-context layer.
 
-3. **Memory changes over time**  
-   Some items should be merged, some superseded, some expired, and some kept stable. Append-only memory is not enough.
+## Architecture evolution
 
-4. **Retrieval alone does not tell the system what is canonical**  
-   Search can find candidate memories, but it does not by itself explain which memory is active, duplicated, outdated, or part of a larger topic state.
+- **V1**: retrieval-first memory
+- **V2**: layered memory (`L0/L1/L2/L3`)
+- **V3**: lifecycle-aware registry governance
+- **V4**: working memory + runtime context + generic hook integration
+- **V4.1**: execution/progress context + session/archive relationship refinement
 
-PruneMem is designed to address those problems together: structured layers for storage and retrieval, registries for memory state, and lifecycle-aware maintenance for memory that evolves over time.
+## What changed in V4
 
-## What PruneMem is
+V4 adds a **session-scoped working-memory layer** separate from long-term memory.
 
-PruneMem is an open-source, structured memory layer for OpenClaw-style agents.
+Publicly exposed V4 capabilities in this repo:
 
-It is designed as a public and portable system for:
-- layered memory organization
-- registry-governed memory state
-- lifecycle-aware maintenance
-- pluggable retrieval and model integrations
+- `working_state` schema for active-session state
+- `working_event` schema for append-only working-memory deltas
+- `runtime_context` generation from working memory
+- `context_bundle` assembly contract
+- generic hook integration guidance for `pre_turn` and `post_turn`
+- bridge field `candidate_long_term_memories` so working memory can feed the V3 pipeline without collapsing into it
 
-It is not a dump of any private workspace, personal memory archive, or production agent state.
+Working memory tracks session-hot state such as:
 
-## What this repository includes
+- task title / goal
+- latest user intent
+- constraints
+- confirmed decisions
+- open questions
+- next actions
+- in-progress steps
+- completed steps
+- blocked items
+- candidate long-term memories
 
-This repository includes:
-- public architecture and schema docs
-- portable governance scripts
-- example configurations
-- synthetic example data
-- sample pipeline assets
-- regression checks
+## What changed in V4.1
 
-It does not include:
-- private memory files
-- personal notes
-- private chat logs
-- production registry exports
-- machine-specific secret configuration
+V4.1 adds a clearer model for **execution continuity** and **archive relationship**.
 
-## Current release status
+Publicly exposed V4.1 capabilities in this repo:
 
-PruneMem v0.1.0 is a public foundation release. It already exposes the core layered-memory, registry-governed, and runnable mock-pipeline structure, but it does not yet reproduce the full private production runtime.
+- `execution_plan` schema
+- `milestone_state` schema
+- execution/progress context rendering
+- session archive snapshots that include working-state and runtime-context snapshots
+- explicit relationship between:
+  - active session working memory
+  - closed-session archives
+  - long-term memory extraction inputs
+  - resume-time runtime context
 
-In PruneMem, registries are part of the memory state, not just helper indexes. They track topic grouping, deduplication/canonical status, lifecycle state, and memory records so the system can maintain memory deliberately rather than only retrieve it.
+In other words:
 
-## Architecture at a glance
+- **working memory** is for the current active task/session
+- **runtime context** is the compact text/context payload compiled from working memory (and optionally execution state)
+- **session archive** is a closed-session snapshot for audit/resume/extraction
+- **long-term memory** remains the governed V3 memory system stored in layers and registries
 
-```mermaid
-flowchart LR
-    A[Session packet] --> B[Extract facts]
-    B --> C[Judge facts]
-    C --> D[Update registries]
-    D --> E[Maintain / validate]
-    E --> F[Layered retrieval]
-```
+## Repository layout
 
-## Public demo flow
+Key paths:
 
-PruneMem already includes a runnable public demo chain:
-
-```text
-session-packet
-  -> run-extract
-  -> run-judge
-  -> update-registries
-  -> maintain
-```
-
-A mock execution path is included so users can understand the full pipeline before wiring in real provider credentials.
+- `src/working/state.js` — public working-memory primitives
+- `src/runtime/execution-context.js` — V4.1 execution/progress abstractions
+- `src/runtime/archive-session.js` — public-safe session archive snapshot builder
+- `src/core/update-working-state.js` — update working state from a synthetic/public delta
+- `src/core/build-runtime-context.js` — render runtime context and context bundle
+- `src/core/execution-plan.js` — build execution plan / milestone state / execution context
+- `src/core/archive-session-v41.js` — build a V4.1-style session archive
+- `examples/working-memory/` — sanitized V4/V4.1 sample assets
+- `docs/working-memory-v4-v41.md` — detailed V4 / V4.1 public explanation
 
 ## Quick start
 
-### 1. Clone the repository
-
-```bash
-git clone <your-repo-url> PruneMem
-cd PruneMem
-```
-
-### 2. Run repository checks
+### 1. Run repository checks
 
 ```bash
 bash scripts/run-checks.sh
 ```
 
-If this passes, the repository is internally consistent enough for first exploration.
-
-This quick start validates the public demo pipeline and repository wiring. It does not yet provide a full production-style OpenClaw runtime integration equivalent to a private Memory V3 deployment.
-
-Current checks cover:
-- registry consistency
-- low-risk `context_note` merge behavior
-- `L1-only` public policy guard
-- provider config resolution
-- provider error normalization
-- CLI input validation
-- mock sample pipeline execution
-- public maintain entry
-
-### 3. Run the sample pipeline in mock mode
+### 2. Run the existing V3-style sample pipeline
 
 ```bash
 node src/core/run-sample-pipeline.js --workspace . --mock
 ```
 
-This runs:
-- extract
-- judge
-- update-registries
-
-against the public example assets.
-
-### 4. Run individual steps
+### 3. Inspect V4/V4.1 working-memory examples
 
 ```bash
-node src/core/run-extract.js --workspace . --mock
-node src/core/run-judge.js --workspace . --mock
+node src/core/get-working-state.js --workspace .
+node src/core/build-runtime-context.js --workspace .
+node src/core/execution-plan.js --workspace .
+node src/core/archive-session-v41.js --workspace .
 ```
 
-### 5. Inspect the example assets
-
-Useful paths:
-- `examples/pipeline/sample-run-01/`
-- `examples/registry/`
-- `examples/layers/`
-- `examples/MEMORY.example.md`
-
-## Using a real provider
-
-By default, the repository is safe to explore without real API keys.
-
-When you want real model calls:
-
-1. copy and edit the backend config
-2. set the provider API key in your environment
-3. run extract/judge without `--mock`
-
-Real-provider execution is available for early testing in v0.1.0, but this path should not yet be treated as fully validated production-grade integration.
-
-Example config direction:
-
-```json
-{
-  "modelProvider": {
-    "type": "openai-compatible",
-    "baseUrl": "https://api.openai.com/v1",
-    "apiKeyEnv": "PRUNEMEM_API_KEY",
-    "model": "gpt-4.1-mini"
-  }
-}
-```
-
-Bailian is supported through a provider adapter as well:
-
-```json
-{
-  "type": "bailian",
-  "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  "apiKeyEnv": "DASHSCOPE_API_KEY",
-  "model": "qwen-max"
-}
-```
-
-### Live commands
+### 4. Regenerate the public working-memory example assets
 
 ```bash
-export PRUNEMEM_API_KEY=your_key_here
-node src/core/run-extract.js --workspace .
-node src/core/run-judge.js --workspace .
+node src/core/update-working-state.js --workspace . --write
 ```
-
-If a provider call fails, the CLI now returns normalized error output with fields such as:
-- `code`
-- `message`
-- `provider`
-- `status`
-- `retryable`
 
 ## Current public default policy
 
-The public example policy is intentionally conservative:
+The public default remains conservative:
 
-- apply target defaults to `L1`
-- `MEMORY` writes are disabled in runtime apply logic
-- `daily-note` writes are disabled in runtime apply logic
+- long-term apply-stage writes still default to **`L1` only**
+- `MEMORY.example.md` is still not written by runtime logic
+- working memory is exposed as **public-safe session state**, not as a dump of private runtime traffic
+- hook integration is documented as a **generic contract**, not as private internal event coupling
 
-This is deliberate: the open-source default should be safe and predictable.
+## Safety boundary
 
-## Repository layout
+This repository is intentionally generalized.
 
-```text
-PruneMem/
-  docs/
-  src/
-    core/
-    archive/
-    extract/
-    judge/
-    runtime/
-    adapters/
-    lib/
-  config/
-  examples/
-  tests/
-  scripts/
-```
+Safe to ship publicly:
 
-## Key docs
+- schemas
+- generalized state machines
+- synthetic examples
+- portable CLI scripts
+- adapter contracts
+- docs that explain layering and lifecycle
+
+Not safe to ship publicly:
+
+- real transcripts
+- private archive files
+- personal workspace paths
+- production operator notes
+- provider credentials
+- internal event payloads copied verbatim from a private runtime
+
+## Checks
+
+Current checks cover:
+
+- registry consistency
+- low-risk `context_note` merge behavior
+- `L1-only` policy guard
+- provider config resolution
+- provider error normalization
+- CLI input validation
+- sample V3 pipeline execution in mock mode
+- working-memory merge/runtime-context generation
+- execution-plan / milestone derivation
+- session archive relationship integrity
+- maintain entrypoint
+
+## Documentation
 
 - `docs/overview.md`
 - `docs/architecture.md`
 - `docs/schema.md`
 - `docs/layers-and-lifecycle.md`
-- `docs/governance.md`
-- `docs/model-provider-adapters.md`
-- `docs/qmd-adapter.md`
+- `docs/working-memory-v4-v41.md`
 - `docs/open-source-scope.md`
-- `docs/quick-start.md`
-- `docs/configuration.md`
-- `docs/faq.md`
+- `docs/migration-from-v1-v2-v3.md`
 
-## Likely v0.2.0 priorities
+## Next recommended follow-up
 
-Likely v0.2.0 priorities include:
-- richer live-provider execution support
-- stronger schema validation
-- better runtime integration helpers
-- broader CI and fixture coverage
+Good next public-safe follow-up items:
 
-These improvements are aimed at making the public release easier to run, easier to validate, and more practical for real experimentation. They should not be read as a claim that the public repo already reproduces the full private production runtime.
-
-## Longer-term follow-up areas
-
-Longer-term follow-up areas may include:
-- more retrieval backends beyond file + optional QMD
-- more complete migration helpers
-- richer diagnostics and inspection tooling
-- broader live-provider validation coverage
-
-## License
-
-Licensed under the MIT License. See `LICENSE`.
-
-## Contributing
-
-See `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md`.
+- stricter JSON Schema files and validators for V4/V4.1 artifacts
+- more hook recipes for host runtimes
+- richer archive search / resume examples
+- more fixtures for blocked-task and multi-milestone flows
+- optional persistence helpers for real workspace integration
