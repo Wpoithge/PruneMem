@@ -1,0 +1,74 @@
+{
+  "schema_version": "memory-v4.policy.v1",
+  "workingMemory": {
+    "enabled": true,
+    "sessionDir": "memory/working/sessions",
+    "snapshotDir": "memory/working/snapshots",
+    "eventLogDir": "memory/runs/working-memory",
+    "maxCompletedSteps": 20,
+    "maxInProgressSteps": 10,
+    "maxNextActions": 10,
+    "maxConstraints": 12,
+    "maxOpenQuestions": 12,
+    "snapshotOnEveryUpdate": false,
+    "snapshotOnStatusChange": true,
+    "candidateLongTermLimit": 8
+  },
+  "hotPath": {
+    "enabled": true,
+    "mode": "rules",
+    "promoteConfirmedDecisions": true,
+    "promoteConstraints": true,
+    "promoteTaskProgress": true,
+    "ignoreCommands": ["/new", "/reset", "/compact", "/stop"]
+  },
+  "contextAssembly": {
+    "enabled": true,
+    "preferWorkingState": true,
+    "maxRetrievedMemories": 6,
+    "maxPrependChars": 1200,
+    "maxWorkspaceItems": 4,
+    "maxCanonicalItems": 4,
+    "omitUpdatedAt": true,
+    "retrieval": {
+      "workspaceSummaryEnabled": true,
+      "canonicalEnabled": true,
+      "dedupeAcrossSources": true,
+      "maxWorkspaceItems": 4,
+      "maxCanonicalItems": 4,
+      "maxRetrievedMemories": 6
+    }
+  },
+  "sessionArchive": {
+    "enabled": true,
+    "archiveDir": "memory/archives/sessions",
+    "appendDailySummary": true,
+    "recentMessagesLimit": 24
+  },
+  "executionPlan": {
+    "enabled": true,
+    "plansDir": "memory/working/plans",
+    "milestonesDir": "memory/working/milestones",
+    "defaultReportEveryMinutesWithoutMilestone": 10,
+    "defaultReportOnMilestone": true,
+    "defaultContinueAfterInterimReport": true,
+    "defaultMilestoneReportRequiredAfterInterim": true
+  },
+  "autopilot": {
+    "enabled": true,
+    "defaultContinueWithoutUser": true,
+    "stopOnMilestone": true,
+    "stopOnBlocked": true,
+    "stopOnNeedsConfirmation": true,
+    "maxContinuationSteps": 12,
+    "continueAcrossMilestones": true
+  },
+  "temporalLifecycle": {
+    "enabled": true,
+    "ttlDaysEphemeral": 7,
+    "ttlDaysReviewable": 30,
+    "staleDaysPersistent": 90,
+    "cronExpr": "17 */6 * * *",
+    "timezone": "UTC"
+  }
+}
