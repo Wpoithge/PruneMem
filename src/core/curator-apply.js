@@ -111,9 +111,22 @@ function contextNoteDryRunCandidate(rows = []) {
   return { kind: 'context-note-merge-candidate', merge_mode: 'dry-run-similar', confidence: Number(sim.toFixed(3)), topic_key: rows[0]?.topic_key || null, dedupe_key: rows[0]?.dedupe_key || null, memory_ids: rows.map((r) => r.memory_id), fact_ids: rows.map((r) => r.fact_id), summaries };
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
+/**
+ * Apply curator decisions to a workspace's registry.
+ * Resolves multi-active memories, normalizes pointers, and merges context notes.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {boolean} [options.write=false] - actually write changes to registry
+ * @param {number} [options.limit=100] - max actions to apply per call
+ * @returns {Promise<{ok: boolean, write: boolean, actions: array, dry_run_candidates: array, summary: object}>}
+ */
+export async function curatorApply({
+  workspace,
+  write = false,
+  limit = 100,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
   const regDir = path.join(root, 'examples', 'registry');
   const memoriesPath = path.join(regDir, 'memories.jsonl');
   const lifecyclePath = path.join(regDir, 'lifecycle.jsonl');
@@ -265,15 +278,24 @@ async function main() {
     actions.push({ kind: 'normalize-topic-pointer', topic_key: topicKey, previous_active_memory_id: previousActive, next_active_memory_id: keeper.memory_id, phase: 'post-resolve' });
   }
 
-  const result = { ok: true, write: args.write, actions: actions.slice(0, args.limit), dry_run_candidates: dryRunCandidates.slice(0, args.limit), summary: { applied: actions.length, expired: actions.filter((a) => a.applied_status === 'expired').length, merged: actions.filter((a) => a.applied_status === 'merged').length, normalized_topic_pointers: actions.filter((a) => a.kind === 'normalize-topic-pointer').length, normalized_dedupe_pointers: actions.filter((a) => a.kind === 'normalize-dedupe-pointer').length, cleared_stale_dedupe_pointers: actions.filter((a) => a.kind === 'clear-stale-dedupe-pointer').length, resolved_multi_active: actions.filter((a) => a.kind === 'resolve-multi-active').length, merged_context_notes: actions.filter((a) => a.kind === 'merge-context-note').length, context_note_merge_candidates: dryRunCandidates.length } };
+  const result = { ok: true, write, actions: actions.slice(0, limit), dry_run_candidates: dryRunCandidates.slice(0, limit), summary: { applied: actions.length, expired: actions.filter((a) => a.applied_status === 'expired').length, merged: actions.filter((a) => a.applied_status === 'merged').length, normalized_topic_pointers: actions.filter((a) => a.kind === 'normalize-topic-pointer').length, normalized_dedupe_pointers: actions.filter((a) => a.kind === 'normalize-dedupe-pointer').length, cleared_stale_dedupe_pointers: actions.filter((a) => a.kind === 'clear-stale-dedupe-pointer').length, resolved_multi_active: actions.filter((a) => a.kind === 'resolve-multi-active').length, merged_context_notes: actions.filter((a) => a.kind === 'merge-context-note').length, context_note_merge_candidates: dryRunCandidates.length } };
 
-  if (args.write && actions.length) {
+  if (write && actions.length) {
     await Promise.all([writeJsonl(memoriesPath, [...memoriesMap.values()]), writeJsonl(lifecyclePath, [...lifecycleMap.values()]), writeJsonl(topicsPath, [...topicsMap.values()]), writeJsonl(dedupePath, [...dedupeMap.values()])]);
   }
-  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+  return result;
 }
 
-main().catch((err) => {
-  console.error('[curator-apply] failed:', err);
-  process.exit(1);
-});
+// ─── CLI shell ─────────────────────────────────
+
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+  const args = parseArgs(process.argv);
+  curatorApply(args)
+    .then(result => {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    })
+    .catch(err => {
+      console.error('[curator-apply] failed:', err);
+      process.exit(1);
+    });
+}
