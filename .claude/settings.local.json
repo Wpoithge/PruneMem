@@ -10,7 +10,8 @@
       "Bash(node tests/regression/check-session-archive.js)",
       "Bash(git init *)",
       "Bash(node src/core/curator-apply.js --workspace .)",
-      "Bash(node --test tests/unit/core/curator-apply.test.js)"
+      "Bash(node --test tests/unit/core/curator-apply.test.js)",
+      "Bash(node --test tests/unit/core/*.test.js)"
     ]
   }
 }

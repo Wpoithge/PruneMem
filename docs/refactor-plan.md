@@ -6,6 +6,8 @@
 
 **Current step:** Step 1 completed ✓ — 2026-04-26 — archive-session-v41 aligned + curator-apply lib+CLI done. **Step 2 待启动。**
 
+**⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
+
 每开始/结束一步时更新这里。格式 `Step N (in progress / completed) — YYYY-MM-DD — brief note`。
 
 ---

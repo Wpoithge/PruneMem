@@ -10,3 +10,4 @@ coverage/
 tmp/
 *.tsbuildinfo
 examples/workspace/
+.claude/settings.local.json

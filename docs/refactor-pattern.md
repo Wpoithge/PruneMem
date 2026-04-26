@@ -267,6 +267,8 @@ export async function maintain({
    diff tests/golden/foo.json /tmp/foo-after.json   # 必须 0 差异
    ```
 
+   **对带时间戳/UUID 等 non-deterministic 字段的脚本**，必须用 `tests/helpers/golden-diff.js` 的 `maskNonDeterministic()` 比对。不要靠人眼判断 "diff 干净（除时间戳）"。在单元测试里用 `compareGolden()` 做自动化断言。
+
 6. **`npm run check`**：跑现有的端到端回归测试（`tests/regression/`），必须全过
 
 7. **加 unit test**：`tests/unit/core/foo.test.js`，至少覆盖 happy path（见 `@test-strategy.md`）

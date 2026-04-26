@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { archiveSessionV41 } from '../../../src/core/archive-session-v41.js';
+import { compareGolden } from '../../helpers/golden-diff.js';
 
 test('archiveSessionV41 - happy path with default workspace', async () => {
   const result = await archiveSessionV41({ workspace: '.' });
@@ -20,4 +21,14 @@ test('archiveSessionV41 - can specify custom memory version', async () => {
 
   assert.ok(result.ok);
   assert.equal(result.archive.memory_version, 'v4.0', 'should use custom memory version');
+});
+
+test('archiveSessionV41 - golden diff matches (masked)', async () => {
+  const result = await archiveSessionV41({ workspace: '.' });
+  const comparison = await compareGolden(
+    JSON.stringify(result),
+    'tests/golden/archive-session-v41.json'
+  );
+
+  assert.ok(comparison.equal, comparison.diff || 'Golden diff should match after masking timestamps');
 });
