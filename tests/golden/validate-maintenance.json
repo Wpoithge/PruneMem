@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "strict": false,
+  "counts": {
+    "memories": 1,
+    "lifecycle": 1,
+    "topics": 1,
+    "dedupe": 1,
+    "bad_source_paths": 0,
+    "missing_lifecycle": 0,
+    "missing_topic_active": 0,
+    "topic_dangling_pointers": 0,
+    "topic_no_active_pointer": 0,
+    "topic_single_active_mismatch": 0,
+    "dedupe_dangling_pointers": 0,
+    "dedupe_no_active_canonical": 0,
+    "dedupe_canonical_drift": 0,
+    "dedupe_single_active_mismatch": 0,
+    "duplicate_memory_bullets": 0
+  },
+  "samples": {
+    "bad_source_paths": [],
+    "missing_lifecycle": [],
+    "topic_dangling_pointers": [],
+    "topic_no_active_pointer": [],
+    "topic_single_active_mismatch": [],
+    "dedupe_dangling_pointers": [],
+    "dedupe_no_active_canonical": [],
+    "dedupe_canonical_drift": [],
+    "dedupe_single_active_mismatch": [],
+    "duplicate_memory_bullets": []
+  },
+  "notes": [
+    "all maintenance checks passed"
+  ],
+  "paths": {
+    "registry": "examples/registry",
+    "pipeline": "examples/pipeline",
+    "memory_md": "examples/MEMORY.example.md"
+  }
+}

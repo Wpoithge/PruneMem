@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(node src/core/archive-session-v41.js --workspace .)",
+      "Bash(node --test tests/unit/core/archive-session-v41.test.js)",
+      "Bash(npm run *)",
+      "Bash(bash scripts/run-checks.sh)",
+      "Bash(node tests/regression/check-session-archive.js)",
+      "Bash(git init *)"
+    ]
+  }
+}

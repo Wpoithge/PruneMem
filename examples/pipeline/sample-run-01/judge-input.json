@@ -1,0 +1,9 @@
+{
+  "memory_id": "mem-example-001",
+  "items": [
+    {
+      "fact_id": "fact-001",
+      "text": "Memory should be layered by signal and retrieval cost."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[run-judge] failed: {
+  "name": "ProviderError",
+  "code": "PROVIDER_AUTH_MISSING",
+  "message": "missing API key for PRUNEMEM_API_KEY",
+  "provider": "openai-compatible",
+  "status": null,
+  "retryable": false,
+  "details": null
+}

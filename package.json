@@ -1,0 +1,15 @@
+{
+  "name": "prunemem",
+  "version": "0.2.0",
+  "private": false,
+  "description": "A layered, lifecycle-aware memory plugin for OpenClaw-style agents.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "check": "node scripts/run-checks.sh",
+    "demo": "bash scripts/demo.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

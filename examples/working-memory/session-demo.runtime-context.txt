@@ -1,0 +1,35 @@
+[Task]
+Upgrade PruneMem public repo to express V4.1
+
+[Goal]
+Finish a public-safe repository release without leaking private runtime details.
+
+[User Request]
+Publicly document and ship the safe V4/V4.1 abstractions.
+
+[Last User Intent]
+Ship a public-safe repository update that explains V4.1 clearly.
+
+[Constraints]:
+- Do not leak private logs, keys, machine-specific paths, or real workspace details.
+- Prefer generalized hook contracts over internal event copies.
+
+[Decisions Confirmed]:
+- Keep long-term memory separate from working memory.
+- Document V4 and V4.1 as layered runtime abstractions.
+
+[In Progress]:
+- Update docs, examples, and changelog for public V4.1 release.
+
+[Next Actions]:
+- Run repository checks.
+- Write release summary to output-last-message.
+
+[Open Questions]:
+- Should the public release include stricter JSON Schema files next?
+
+[Completed]:
+- Audit repository baseline and inspect private references for safe abstractions.
+
+[Last Agent Action]
+Drafted working-memory, runtime-context, and archive relationship materials.

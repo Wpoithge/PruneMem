@@ -1,0 +1,12 @@
+{
+  "schema_version": "prunemem.session-packet.v1",
+  "memory_id": "mem-example-001",
+  "session_key": "agent:demo:main",
+  "channel": "webchat",
+  "agent": "demo",
+  "trigger": "command:new",
+  "ended_at": "2026-03-14T00:00:00.000Z",
+  "messages": [
+    { "idx": 1, "role": "user", "text": "Remember that memory should be layered.", "ts": "2026-03-14T00:00:00.000Z" }
+  ]
+}

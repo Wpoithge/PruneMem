@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "write": false,
+  "actions": [],
+  "dry_run_candidates": [],
+  "summary": {
+    "applied": 0,
+    "expired": 0,
+    "merged": 0,
+    "normalized_topic_pointers": 0,
+    "normalized_dedupe_pointers": 0,
+    "cleared_stale_dedupe_pointers": 0,
+    "resolved_multi_active": 0,
+    "merged_context_notes": 0,
+    "context_note_merge_candidates": 0
+  }
+}

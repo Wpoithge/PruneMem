@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "inserted": 1,
+  "files": {
+    "topics": "examples/registry/topics.jsonl",
+    "dedupe": "examples/registry/dedupe-index.jsonl",
+    "lifecycle": "examples/registry/lifecycle.jsonl",
+    "memories": "examples/registry/memories.jsonl"
+  }
+}

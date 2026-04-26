@@ -1,0 +1,67 @@
+{
+  "schema_version": "prunemem.working-state.v1",
+  "memory_version": "v4.1",
+  "session_key": "agent:demo:main",
+  "channel": "webchat",
+  "agent": "demo",
+  "status": "active",
+  "task_title": "Upgrade PruneMem public repo to express V4.1",
+  "goal": "Finish a public-safe repository release without leaking private runtime details.",
+  "user_request_summary": "Publicly document and ship the safe V4/V4.1 abstractions.",
+  "constraints": [
+    "Do not leak private logs, keys, machine-specific paths, or real workspace details.",
+    "Prefer generalized hook contracts over internal event copies."
+  ],
+  "decisions_confirmed": [
+    "Keep long-term memory separate from working memory.",
+    "Document V4 and V4.1 as layered runtime abstractions."
+  ],
+  "open_questions": [
+    "Should the public release include stricter JSON Schema files next?"
+  ],
+  "next_actions": [
+    "Run repository checks.",
+    "Write release summary to output-last-message."
+  ],
+  "completed_steps": [
+    "Audit repository baseline and inspect private references for safe abstractions."
+  ],
+  "in_progress_steps": [
+    "Update docs, examples, and changelog for public V4.1 release."
+  ],
+  "blocked_items": [],
+  "artifacts": [],
+  "candidate_long_term_memories": [
+    {
+      "memory_class": "long_term_decision",
+      "canonical_summary": "PruneMem public releases must keep working memory and long-term memory explicitly separated.",
+      "target_layers": [
+        "L1"
+      ]
+    },
+    {
+      "memory_class": "long_term_decision",
+      "canonical_summary": "PruneMem public releases must keep working memory and long-term memory explicitly separated.",
+      "target_layers": [
+        "L1"
+      ]
+    },
+    {
+      "memory_class": "long_term_decision",
+      "canonical_summary": "PruneMem public releases must keep working memory and long-term memory explicitly separated.",
+      "target_layers": [
+        "L1"
+      ]
+    }
+  ],
+  "last_user_intent": "Ship a public-safe repository update that explains V4.1 clearly.",
+  "last_agent_action_summary": "Drafted working-memory, runtime-context, and archive relationship materials.",
+  "source_sessions": [
+    "agent:demo:main"
+  ],
+  "related_archives": [
+    "archive:demo-session-20260318"
+  ],
+  "created_at": "2026-04-12T01:53:07.177Z",
+  "updated_at": "2026-04-12T01:53:50.986Z"
+}

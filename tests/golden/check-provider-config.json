@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "provider_type": "openai-compatible",
+  "model": "gpt-4.1-mini",
+  "base_url": "https://api.openai.com/v1",
+  "api_key_env": "PRUNEMEM_API_KEY",
+  "provider_class": "OpenAICompatibleProvider"
+}
