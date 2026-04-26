@@ -4,7 +4,7 @@
 
 ## Status
 
-**Current step:** Step 0 completed ✓ — 2026-04-26 — see `audit-findings.md`. **Step 1 pilot 待启动。**
+**Current step:** Step 1 completed ✓ — 2026-04-26 — archive-session-v41 aligned + curator-apply lib+CLI done. **Step 2 待启动。**
 
 每开始/结束一步时更新这里。格式 `Step N (in progress / completed) — YYYY-MM-DD — brief note`。
 
