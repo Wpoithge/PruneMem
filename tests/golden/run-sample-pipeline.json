@@ -8,7 +8,7 @@
   "details": null
 }
 
-    at ChildProcess.<anonymous> (file:///Users/yang/Desktop/PruneMem/src/core/run-sample-pipeline.js:21:37)
+    at ChildProcess.<anonymous> (file:///Users/yang/Desktop/PruneMem/src/core/run-sample-pipeline.js:27:37)
     at ChildProcess.emit (node:events:509:20)
     at maybeClose (node:internal/child_process:1108:16)
     at ChildProcess._handle.onexit (node:internal/child_process:305:5)
