@@ -310,6 +310,30 @@ export async function maintain({
 
 ---
 
+## 铁律：何时不允许覆盖 golden
+
+遇到 golden diff fail，**永远不要直接 cp 覆盖 golden**。即使你判断"baseline 是错的"——这个判断必须先报告给上游决定，不能自行处理。
+
+常见的"baseline 是错的"场景：
+
+- Step 0 抓 baseline 时缺 API key / 配置不全，抓到的是错误信息（如 run-extract / run-judge 的 PROVIDER_AUTH_MISSING）
+- 改造涉及输出 schema 变更（这种改造本身就需要重新讨论范围，不应该出现在 0.3 refactor 里）
+- 改造涉及非确定性字段（应该走 maskNonDeterministic helper，不是改 golden）
+
+正确流程：
+
+1. 看到 diff fail，立即停下来
+2. 报告给上游（user / reviewer），附上 diff 输出 + 你的诊断
+3. 等待决定后再操作。可能的决定包括：
+   - 改 maskNonDeterministic 加新字段（最常见）
+   - 单独 commit 一个"重新生成 baseline"（带明确 commit message 解释为什么），再做改造
+   - revert 改造重新设计
+4. 不允许在同一个 refactor commit 里既改代码又覆盖 golden——这两件事必须分开 commit
+
+反例（已发生）：commit 635498a 和 5da411f 在 refactor commit 里直接覆盖 golden，导致这两个文件的回归保护延迟生效（见 refactor-plan.md Known issue #2）。
+
+---
+
 ## 何时偏离这个模式
 
 少数 core 脚本可能有特殊情况，遇到时**先停下问用户**：

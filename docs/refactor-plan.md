@@ -4,13 +4,19 @@
 
 ## Status
 
-**Current step:** Step 1 completed ✓ — 2026-04-26 — archive-session-v41 aligned + curator-apply lib+CLI done. **Step 2 待启动。**
+**Current step:** Step 3 in progress (8/10 files done) — 2026-04-27 — Step 2a + Step 3 first 8 files completed; run-extract / run-judge committed but with delayed-onset golden coverage (see Issue #2); update-registries pending redo.
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
 ### Known issues
 
 - **Issue #1: `examples/registry/` contamination during execution.** `run-sample-pipeline` (and possibly other scripts) write into `examples/registry/` during execution. This contaminates the demo workspace and risks accidental commits. Need to investigate in Step 3 when refactoring `run-extract` / `run-judge` / `update-registries` which are likely the actual writers. **Mitigation until then:** always check `git status` after running these scripts and `git checkout -- examples/` if registry files changed.
+
+- **Issue #2: run-extract (commit 635498a) 和 run-judge (commit 5da411f) 的 golden baseline 在改造时被直接覆盖**（用 mock 模式输出替换），跳过了"先 commit mock baseline 再做改造"的正确流程。原因：Step 0 抓 golden 时这两个脚本因缺 API key 失败，抓到的是 PROVIDER_AUTH_MISSING 错误信息，从 Step 0 起就无回归价值。
+
+  现状：经验证（2026-04-27 阶段 C2/C3），当前 golden 与当前代码 mock 输出一致，从这两个 commit 之后任何对 run-extract / run-judge 的改动都会被 golden diff 抓到。这两个文件的回归保护从 commit 时点开始生效，不溯及更早状态。
+
+  未来贡献者注意：如果 mock 模式实现本身被改动（比如 mock 数据生成逻辑、provider factory 的 mock branch），需要重新评估这两个 golden 是否需要重新生成。
 
 每开始/结束一步时更新这里。格式 `Step N (in progress / completed) — YYYY-MM-DD — brief note`。
 
