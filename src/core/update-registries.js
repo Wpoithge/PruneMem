@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { isMainModule } from '../lib/cli-entry.js';
 
 async function ensureDir(dir) {
   await fs.mkdir(dir, { recursive: true });
@@ -48,18 +49,29 @@ function uniq(arr = []) {
   return [...new Set(arr.filter(Boolean))];
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
+/**
+ * Update registries from judged facts.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to process.cwd()
+ * @param {string} [options.judged] - path to judged.json
+ * @param {string} [options.sourcePaths] - path to apply.json (source paths manifest)
+ * @param {string} [options.memoryId] - memory id override
+ * @param {string} [options.channel='demo'] - channel override
+ * @param {string} [options.agent='demo'] - agent override
+ * @returns {Promise<{ok: boolean, inserted: number, files: object}>}
+ */
+export async function updateRegistries({ workspace, judged: judgedArg, sourcePaths: sourcePathsArg, memoryId: memoryIdArg, channel = 'demo', agent = 'demo' } = {}) {
+  const root = path.resolve(workspace || process.cwd());
   const regDir = path.join(root, 'examples', 'registry');
   await ensureDir(regDir);
 
-  const judgedPath = args.judged || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'judged.json');
-  const sourcePathsPath = args.sourcePaths || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'apply.json');
+  const judgedPath = judgedArg || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'judged.json');
+  const sourcePathsPath = sourcePathsArg || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'apply.json');
   const judged = await readJson(judgedPath, { result: { items: [] } });
   const apply = await readJson(sourcePathsPath, { files: [], violations: [] });
   const items = judged?.result?.items || judged?.items || [];
-  const memoryId = args.memoryId || judged?.memory_id || 'mem-example-001';
+  const memoryId = memoryIdArg || judged?.memory_id || 'mem-example-001';
   const nowIso = new Date().toISOString();
 
   const sourcePaths = {};
@@ -108,8 +120,8 @@ async function main() {
       source_paths: sourcePaths,
       created_at: nowIso,
       updated_at: nowIso,
-      channel: args.channel,
-      agent: args.agent,
+      channel,
+      agent,
     };
     memories.set(`${row.memory_id}:${row.fact_id || ''}:${row.dedupe_key || ''}`, row);
 
@@ -151,7 +163,7 @@ async function main() {
     writeJsonl(memoriesPath, [...memories.values()]),
   ]);
 
-  process.stdout.write(JSON.stringify({
+  return {
     ok: true,
     inserted,
     files: {
@@ -160,10 +172,17 @@ async function main() {
       lifecycle: path.relative(root, lifecyclePath),
       memories: path.relative(root, memoriesPath),
     }
-  }, null, 2) + '\n');
+  };
 }
 
-main().catch((err) => {
-  console.error('[update-registries] failed:', err);
-  process.exit(1);
-});
+// ─── CLI shell ─────────────────────────────────
+
+if (isMainModule(import.meta.url)) {
+  const args = parseArgs(process.argv);
+  updateRegistries(args)
+    .then(result => process.stdout.write(JSON.stringify(result, null, 2) + '\n'))
+    .catch(err => {
+      console.error('[update-registries] failed:', err);
+      process.exit(1);
+    });
+}
