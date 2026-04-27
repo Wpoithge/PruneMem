@@ -275,6 +275,14 @@ export async function maintain({
 
 8. **commit**：`refactor(core): make foo importable as a library`
 
+**⚠️ golden-diff helper 扩展原则：**
+
+如果改造过程中发现 `tests/helpers/golden-diff.js` 需要扩展（新的 non-deterministic 字段），**优先单独 commit 那个扩展**，然后再做改造 commit。
+
+**例外**：当扩展是 1-2 行、与改造逻辑紧密耦合时，可以放在同一个 commit，但 commit message 必须明确两件事都做了（例如 commit dcfb7b4 同时改造 maintain + 扩展 helper mask `duration_ms`）。
+
+**Step 3 批量改造时尤其严格**：同一个 helper 不要在多个 commit 里反复扩展。如果预见到多个脚本都需要新字段，先统一扩展 helper（一个 commit），再批量改造脚本（多个 commit）。
+
 ---
 
 ## Design rationale
