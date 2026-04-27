@@ -8,6 +8,10 @@
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
+### Known issues
+
+- **Issue #1: `examples/registry/` contamination during execution.** `run-sample-pipeline` (and possibly other scripts) write into `examples/registry/` during execution. This contaminates the demo workspace and risks accidental commits. Need to investigate in Step 3 when refactoring `run-extract` / `run-judge` / `update-registries` which are likely the actual writers. **Mitigation until then:** always check `git status` after running these scripts and `git checkout -- examples/` if registry files changed.
+
 每开始/结束一步时更新这里。格式 `Step N (in progress / completed) — YYYY-MM-DD — brief note`。
 
 ---
