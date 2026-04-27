@@ -12,6 +12,7 @@ const TIMESTAMP_FIELDS = [
   'expires_at',
   'first_seen_at',
   'generated_at',
+  'duration_ms',
 ];
 
 const UUID_FIELDS = [
@@ -37,7 +38,7 @@ export function maskNonDeterministic(obj) {
 
   const masked = {};
   for (const [key, value] of Object.entries(obj)) {
-    if (TIMESTAMP_FIELDS.includes(key) && typeof value === 'string') {
+    if (TIMESTAMP_FIELDS.includes(key)) {
       masked[key] = '<TIMESTAMP>';
     } else if (UUID_FIELDS.includes(key) && typeof value === 'string') {
       masked[key] = '<UUID>';

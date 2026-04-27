@@ -2,6 +2,12 @@
 import path from 'node:path';
 import process from 'node:process';
 import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { curatorApply } from './curator-apply.js';
+
+// TODO: Replace remaining spawn() calls after Step 3 lib化完成:
+// - validate-maintenance.js
+// - repair-source-paths.js
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false, strict: false, repairSourcePaths: false, timeoutMs: 120000 };
@@ -47,35 +53,77 @@ async function runStep({ name, script, args, cwd, timeoutMs }) {
   });
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
+/**
+ * Run maintenance pipeline on a workspace's registry.
+ * Validates, applies curator decisions, optionally repairs source paths, then validates again.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {boolean} [options.write=false] - actually write changes
+ * @param {boolean} [options.strict=false] - strict validation mode
+ * @param {boolean} [options.repairSourcePaths=false] - run repair-source-paths step
+ * @param {number} [options.timeoutMs=120000] - timeout per step in milliseconds
+ * @returns {Promise<{ok: boolean, summary: object, steps: array}>}
+ */
+export async function maintain({
+  workspace,
+  write = false,
+  strict = false,
+  repairSourcePaths = false,
+  timeoutMs = 120000,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
   const coreDir = path.join(root, 'src', 'core');
+
   const steps = [
-    { name: 'validate-maintenance(pre)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(args.strict ? ['--strict'] : [])] },
-    { name: 'curator-apply', script: path.join(coreDir, 'curator-apply.js'), args: ['--workspace', root, ...(args.write ? ['--write'] : [])] },
+    { name: 'validate-maintenance(pre)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(strict ? ['--strict'] : [])] },
+    { name: 'curator-apply', fn: () => curatorApply({ workspace: root, write }) },
   ];
-  if (args.repairSourcePaths) {
-    steps.push({ name: 'repair-source-paths', script: path.join(coreDir, 'repair-source-paths.js'), args: ['--workspace', root, ...(args.write ? ['--write'] : [])] });
+
+  if (repairSourcePaths) {
+    steps.push({ name: 'repair-source-paths', script: path.join(coreDir, 'repair-source-paths.js'), args: ['--workspace', root, ...(write ? ['--write'] : [])] });
   }
-  steps.push({ name: 'validate-maintenance(post)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(args.strict ? ['--strict'] : [])] });
+
+  steps.push({ name: 'validate-maintenance(post)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(strict ? ['--strict'] : [])] });
 
   const results = [];
   for (const step of steps) {
-    const result = await runStep({ ...step, cwd: root, timeoutMs: args.timeoutMs });
+    let result;
+    if (step.fn) {
+      const startedAt = Date.now();
+      try {
+        const parsed = await step.fn();
+        result = { name: step.name, ok: parsed.ok !== false, code: 0, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: '', parsed };
+      } catch (err) {
+        result = { name: step.name, ok: false, code: null, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: truncate(String(err)), parsed: null };
+      }
+    } else {
+      result = await runStep({ ...step, cwd: root, timeoutMs });
+    }
     results.push(result);
     if (!result.ok) break;
   }
+
   const failed = results.find((r) => !r.ok) || null;
-  process.stdout.write(JSON.stringify({
+  return {
     ok: !failed,
-    summary: { steps_total: steps.length, steps_run: results.length, steps_ok: results.filter((r) => r.ok).length, failed_step: failed?.name || null, write: args.write, strict: args.strict, repair_source_paths: args.repairSourcePaths },
+    summary: { steps_total: steps.length, steps_run: results.length, steps_ok: results.filter((r) => r.ok).length, failed_step: failed?.name || null, write, strict, repair_source_paths: repairSourcePaths },
     steps: results.map((r) => ({ name: r.name, ok: r.ok, code: r.code, signal: r.signal, timed_out: r.timed_out, duration_ms: r.duration_ms, parsed: r.parsed, stderr: r.stderr || '' }))
-  }, null, 2) + '\n');
-  process.exit(failed ? 1 : 0);
+  };
 }
 
-main().catch((err) => {
-  console.error('[maintain] failed:', err);
-  process.exit(1);
-});
+// ─── CLI shell ─────────────────────────────────
+
+async function main() {
+  const args = parseArgs(process.argv);
+  const result = await maintain(args);
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+  process.exit(result.ok ? 0 : 1);
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('[maintain] failed:', err);
+    process.exit(1);
+  });
+}
