@@ -1,9 +1,6 @@
-[run-extract] failed: {
-  "name": "ProviderError",
-  "code": "PROVIDER_AUTH_MISSING",
-  "message": "missing API key for PRUNEMEM_API_KEY",
-  "provider": "openai-compatible",
-  "status": null,
-  "retryable": false,
-  "details": null
+{
+  "ok": true,
+  "input": "examples/pipeline/sample-run-01/session-packet.json",
+  "output": "examples/pipeline/sample-run-01/extracted.generated.json",
+  "mock": true
 }
