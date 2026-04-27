@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false, limit: 100 };
@@ -288,7 +289,7 @@ export async function curatorApply({
 
 // ─── CLI shell ─────────────────────────────────
 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv);
   curatorApply(args)
     .then(result => {
