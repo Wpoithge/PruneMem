@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false };
@@ -19,9 +20,19 @@ async function ensureDir(dir) { await fs.mkdir(dir, { recursive: true }); }
 async function writeJsonIfMissing(dst, obj, { write } = { write: false }) { if (await exists(dst)) return false; if (!write) return true; await ensureDir(path.dirname(dst)); await fs.writeFile(dst, `${JSON.stringify(obj, null, 2)}\n`, 'utf8'); return true; }
 function inferYm(memoryId) { const m = /^mem-(\d{4})(\d{2})/.exec(memoryId || ''); return m ? `${m[1]}-${m[2]}` : null; }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
+/**
+ * Repair missing source paths by creating placeholder pipeline artifacts.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {boolean} [options.write=false] - actually write placeholder files
+ * @returns {Promise<{ok: boolean, write: boolean, repaired: number, actions: array}>}
+ */
+export async function repairSourcePaths({
+  workspace,
+  write = false,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
   const regPath = path.join(root, 'examples', 'registry', 'memories.jsonl');
   const rows = await readJsonl(regPath);
   const actions = [];
@@ -35,13 +46,26 @@ async function main() {
     const missingFields = Object.entries(src).filter(([, rel]) => rel).filter(([, rel]) => !path.isAbsolute(rel)).filter(([, rel]) => !existsSync(path.join(root, rel))).map(([field]) => field);
     if (!missingFields.length) continue;
     const touched = [];
-    if (missingFields.includes('packet')) { const changed = await writeJsonIfMissing(targets.packet, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, note: 'session-packet.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write: args.write }); if (changed) touched.push('packet'); }
-    if (missingFields.includes('extract')) { const changed = await writeJsonIfMissing(targets.extract, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, facts: [], note: 'extracted.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write: args.write }); if (changed) touched.push('extract'); }
-    if (missingFields.includes('judge_input')) { const changed = await writeJsonIfMissing(targets.judge_input, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, note: 'judge-input.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write: args.write }); if (changed) touched.push('judge_input'); }
-    if (missingFields.includes('judge')) { const changed = await writeJsonIfMissing(targets.judge, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, judgement: { memory_class: row.memory_class, topic_key: row.topic_key, dedupe_key: row.dedupe_key, status: row.status, canonical_summary: row.canonical_summary }, note: 'judged.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write: args.write }); if (changed) touched.push('judge'); }
-    if (missingFields.includes('apply')) { const changed = await writeJsonIfMissing(targets.apply, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, status: row.status, note: 'apply.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write: args.write }); if (changed) touched.push('apply'); }
+    if (missingFields.includes('packet')) { const changed = await writeJsonIfMissing(targets.packet, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, note: 'session-packet.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('packet'); }
+    if (missingFields.includes('extract')) { const changed = await writeJsonIfMissing(targets.extract, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, facts: [], note: 'extracted.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('extract'); }
+    if (missingFields.includes('judge_input')) { const changed = await writeJsonIfMissing(targets.judge_input, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, note: 'judge-input.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('judge_input'); }
+    if (missingFields.includes('judge')) { const changed = await writeJsonIfMissing(targets.judge, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, judgement: { memory_class: row.memory_class, topic_key: row.topic_key, dedupe_key: row.dedupe_key, status: row.status, canonical_summary: row.canonical_summary }, note: 'judged.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('judge'); }
+    if (missingFields.includes('apply')) { const changed = await writeJsonIfMissing(targets.apply, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, status: row.status, note: 'apply.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('apply'); }
     if (touched.length) actions.push({ memory_id: row.memory_id, fact_id: row.fact_id, repaired_fields: touched, pipeline_dir: pipelineDirRel });
   }
-  process.stdout.write(JSON.stringify({ ok: true, write: args.write, repaired: actions.length, actions }, null, 2) + '\n');
+  return { ok: true, write, repaired: actions.length, actions };
 }
-main().catch((err) => { console.error('[repair-source-paths] failed:', err); process.exit(1); });
+
+// ─── CLI shell ─────────────────────────────────
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const args = parseArgs(process.argv);
+  repairSourcePaths(args)
+    .then(result => {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    })
+    .catch((err) => {
+      console.error('[repair-source-paths] failed:', err);
+      process.exit(1);
+    });
+}
