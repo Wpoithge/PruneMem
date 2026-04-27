@@ -13,6 +13,7 @@ const TIMESTAMP_FIELDS = [
   'first_seen_at',
   'generated_at',
   'duration_ms',
+  'recorded_at',
 ];
 
 const UUID_FIELDS = [

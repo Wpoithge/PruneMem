@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { buildRuntimeContextFromWorkingState, buildWorkingEvent, defaultWorkingState, mergeWorkingState } from '../working/state.js';
 
 function parseArgs(argv) {
@@ -24,16 +25,30 @@ async function readJson(filePath, fallback) {
   }
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
-  const inputPath = args.input || path.join(root, 'examples', 'working-memory', 'update-input.json');
-  const statePath = args.state || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
+/**
+ * Update working state from input delta and optionally write to disk.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {string} [options.input] - path to update-input.json
+ * @param {string} [options.state] - path to working-state.json
+ * @param {boolean} [options.write=false] - write updated state to disk
+ * @returns {Promise<{ok: boolean, state: object, event: object, runtimeContext: object, written: boolean}>}
+ */
+export async function updateWorkingState({
+  workspace,
+  input: inputPath,
+  state: statePath,
+  write = false,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
+  const finalInputPath = inputPath || path.join(root, 'examples', 'working-memory', 'update-input.json');
+  const finalStatePath = statePath || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
 
-  const input = await readJson(inputPath, null);
-  if (!input) throw new Error(`input not found: ${inputPath}`);
+  const input = await readJson(finalInputPath, null);
+  if (!input) throw new Error(`input not found: ${finalInputPath}`);
 
-  const current = await readJson(statePath, defaultWorkingState(input.seed || {}));
+  const current = await readJson(finalStatePath, defaultWorkingState(input.seed || {}));
   const next = mergeWorkingState(current, { ...(input.delta || {}), memory_version: input.memory_version || input.delta?.memory_version }, input.policy || {});
   const event = buildWorkingEvent({
     sessionKey: next.session_key,
@@ -44,17 +59,27 @@ async function main() {
   });
   const runtimeContext = buildRuntimeContextFromWorkingState(next, { memoryVersion: input.memory_version || next.memory_version });
 
-  if (args.write) {
-    await fs.writeFile(statePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
+  if (write) {
+    await fs.writeFile(finalStatePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.working-event.json'), JSON.stringify(event, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.runtime-context.json'), JSON.stringify(runtimeContext, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.runtime-context.txt'), `${runtimeContext.content}\n`, 'utf8');
   }
 
-  process.stdout.write(JSON.stringify({ ok: true, state: next, event, runtimeContext, written: args.write }, null, 2) + '\n');
+  return { ok: true, state: next, event, runtimeContext, written: write };
 }
 
-main().catch((err) => {
-  console.error('[update-working-state] failed:', err);
-  process.exit(1);
-});
+// ─── CLI shell ─────────────────────────────────
+
+async function main() {
+  const args = parseArgs(process.argv);
+  const result = await updateWorkingState(args);
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('[update-working-state] failed:', err);
+    process.exit(1);
+  });
+}
