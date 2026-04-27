@@ -138,6 +138,7 @@ End state：
 4. `npm run check` 通过
 5. **单独 commit**：每个文件一个 commit
 6. 改完之后回到 Step 2b，把 maintain / run-sample-pipeline 里剩余的 spawn 换成 import
+7. **完成 run-extract / run-judge 的 --mock 改造后**，回头给 `run-sample-pipeline` 补一个 unit test（用 `--mock` 模式）。这是 Step 2a 时挂的债，Step 3 必须还掉。
 
 **关于 run-extract / run-judge 的 golden**：Step 0 因为缺 API key 没抓到 baseline。改造**前**先用 mock 模式抓一份临时 baseline（commit 之前），改造**后**用同样的 mock 输入比对。这是这两个脚本的 backward-compat 验证方式。
 
