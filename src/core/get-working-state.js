@@ -2,6 +2,27 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Get working state from a workspace.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {string} [options.input] - path to working-state.json
+ * @returns {Promise<object>} - parsed working state object
+ */
+export async function getWorkingState({
+  workspace,
+  input: inputPath,
+} = {}) {
+  const root = workspace || process.cwd();
+  const finalInputPath = inputPath || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
+  const raw = await fs.readFile(path.resolve(finalInputPath), 'utf8');
+  return JSON.parse(raw);
+}
+
+// ─── CLI shell ─────────────────────────────────
 
 async function main() {
   const workspace = process.argv.includes('--workspace')
@@ -9,12 +30,14 @@ async function main() {
     : process.cwd();
   const input = process.argv.includes('--input')
     ? process.argv[process.argv.indexOf('--input') + 1]
-    : path.join(workspace, 'examples', 'working-memory', 'session-demo.working-state.json');
-  const raw = await fs.readFile(path.resolve(input), 'utf8');
-  process.stdout.write(raw.trim() + '\n');
+    : undefined;
+  const result = await getWorkingState({ workspace, input });
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 
-main().catch((err) => {
-  console.error('[get-working-state] failed:', err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('[get-working-state] failed:', err);
+    process.exit(1);
+  });
+}
