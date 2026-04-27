@@ -2,24 +2,46 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { buildExecutionContext, createExecutionPlan, deriveMilestoneState } from '../runtime/execution-context.js';
+
+/**
+ * Create execution plan from input and derive milestone state and execution context.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {string} [options.input] - path to execution-plan input JSON
+ * @returns {Promise<{ok: boolean, plan: object, milestoneState: object, executionContext: object}>}
+ */
+export async function executionPlan({
+  workspace,
+  input: inputPath,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
+  const finalInputPath = inputPath || path.join(root, 'examples', 'working-memory', 'execution-plan.input.json');
+  const input = JSON.parse(await fs.readFile(finalInputPath, 'utf8'));
+  const plan = createExecutionPlan(input);
+  const milestoneState = deriveMilestoneState(plan);
+  const executionContext = buildExecutionContext(plan, milestoneState);
+  return { ok: true, plan, milestoneState, executionContext };
+}
+
+// ─── CLI shell ─────────────────────────────────
 
 async function main() {
   const workspace = process.argv.includes('--workspace')
     ? process.argv[process.argv.indexOf('--workspace') + 1]
     : process.cwd();
-  const root = path.resolve(workspace);
-  const inputPath = process.argv.includes('--input')
+  const input = process.argv.includes('--input')
     ? process.argv[process.argv.indexOf('--input') + 1]
-    : path.join(root, 'examples', 'working-memory', 'execution-plan.input.json');
-  const input = JSON.parse(await fs.readFile(inputPath, 'utf8'));
-  const plan = createExecutionPlan(input);
-  const milestoneState = deriveMilestoneState(plan);
-  const executionContext = buildExecutionContext(plan, milestoneState);
-  process.stdout.write(JSON.stringify({ ok: true, plan, milestoneState, executionContext }, null, 2) + '\n');
+    : undefined;
+  const result = await executionPlan({ workspace, input });
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 
-main().catch((err) => {
-  console.error('[execution-plan] failed:', err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('[execution-plan] failed:', err);
+    process.exit(1);
+  });
+}
