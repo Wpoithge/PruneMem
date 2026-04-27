@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/cli-entry.js';
 import { archiveSession } from '../runtime/archive-session.js';
 
 async function readJson(filePath) {
@@ -55,7 +55,7 @@ async function cliMain() {
   process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMainModule(import.meta.url)) {
   cliMain().catch((err) => {
     console.error('[archive-session-v41] failed:', err);
     process.exit(1);

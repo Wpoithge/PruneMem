@@ -2,7 +2,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/cli-entry.js';
 
 // TODO (Step 2b): Replace spawn() with import after Step 3 lib化:
 // - run-extract.js
@@ -61,7 +61,7 @@ export async function runSamplePipeline({
 
 // ─── CLI shell ─────────────────────────────────
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMainModule(import.meta.url)) {
   const args = parseArgs(process.argv);
   runSamplePipeline(args)
     .then((result) => {

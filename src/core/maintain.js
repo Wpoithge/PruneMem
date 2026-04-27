@@ -2,7 +2,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/cli-entry.js';
 import { curatorApply } from './curator-apply.js';
 
 // TODO: Replace remaining spawn() calls after Step 3 lib化完成:
@@ -121,7 +121,7 @@ async function main() {
   process.exit(result.ok ? 0 : 1);
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     console.error('[maintain] failed:', err);
     process.exit(1);

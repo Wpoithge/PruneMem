@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/cli-entry.js';
 import { loadBackendConfig } from '../runtime/load-config.js';
 import { createModelProvider } from '../runtime/provider-factory.js';
 
@@ -38,7 +38,7 @@ async function main() {
   process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     console.error('[check-provider-config] failed:', err);
     process.exit(1);

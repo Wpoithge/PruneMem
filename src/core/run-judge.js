@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/cli-entry.js';
 import { judgeFacts } from '../judge/judge-facts.js';
 import { judgeFactsPrompt } from '../runtime/prompt-templates.js';
 import { validateExtractedFacts } from '../lib/validate-input.js';
@@ -77,7 +77,7 @@ async function main() {
   process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     const normalized = err?.name === 'ProviderError' ? describeProviderError(err) : {
       name: err?.name || 'Error',
