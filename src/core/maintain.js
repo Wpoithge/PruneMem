@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import process from 'node:process';
-import { spawn } from 'node:child_process';
 import { isMainModule } from '../lib/cli-entry.js';
 import { curatorApply } from './curator-apply.js';
-
-// TODO: Replace remaining spawn() calls after Step 3 lib化完成:
-// - validate-maintenance.js
-// - repair-source-paths.js
+import { validateMaintenance } from './validate-maintenance.js';
+import { repairSourcePaths } from './repair-source-paths.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false, strict: false, repairSourcePaths: false, timeoutMs: 120000 };
@@ -22,37 +19,6 @@ function parseArgs(argv) {
   return out;
 }
 
-function truncate(text, max = 4000) {
-  const s = String(text || '');
-  return s.length <= max ? s : `${s.slice(0, max)}\n...[truncated]`;
-}
-
-async function runStep({ name, script, args, cwd, timeoutMs }) {
-  return await new Promise((resolve) => {
-    const child = spawn(process.execPath, [script, ...args], { cwd, env: process.env });
-    let stdout = '';
-    let stderr = '';
-    let timedOut = false;
-    const startedAt = Date.now();
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill('SIGTERM');
-    }, timeoutMs);
-    child.stdout.on('data', (d) => { stdout += d.toString(); });
-    child.stderr.on('data', (d) => { stderr += d.toString(); });
-    child.on('close', (code, signal) => {
-      clearTimeout(timer);
-      let parsed = null;
-      try { parsed = JSON.parse(stdout); } catch {}
-      resolve({ name, ok: code === 0 && !signal && !timedOut, code, signal, timed_out: timedOut, duration_ms: Date.now() - startedAt, stdout: truncate(stdout), stderr: truncate(stderr), parsed });
-    });
-    child.on('error', (err) => {
-      clearTimeout(timer);
-      resolve({ name, ok: false, code: null, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: truncate(stdout), stderr: truncate(String(err)), parsed: null });
-    });
-  });
-}
-
 /**
  * Run maintenance pipeline on a workspace's registry.
  * Validates, applies curator decisions, optionally repairs source paths, then validates again.
@@ -62,7 +28,7 @@ async function runStep({ name, script, args, cwd, timeoutMs }) {
  * @param {boolean} [options.write=false] - actually write changes
  * @param {boolean} [options.strict=false] - strict validation mode
  * @param {boolean} [options.repairSourcePaths=false] - run repair-source-paths step
- * @param {number} [options.timeoutMs=120000] - timeout per step in milliseconds
+ * @param {number} [options.timeoutMs=120000] - deprecated, no-op since Step 2b (all steps run in-process)
  * @returns {Promise<{ok: boolean, summary: object, steps: array}>}
  */
 export async function maintain({
@@ -73,32 +39,31 @@ export async function maintain({
   timeoutMs = 120000,
 } = {}) {
   const root = path.resolve(workspace || process.cwd());
-  const coreDir = path.join(root, 'src', 'core');
+
+  if (timeoutMs !== 120000) {
+    process.stderr.write('[maintain] warning: --timeout-ms is deprecated and has no effect since Step 2b refactor (all steps run in-process)\n');
+  }
 
   const steps = [
-    { name: 'validate-maintenance(pre)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(strict ? ['--strict'] : [])] },
+    { name: 'validate-maintenance(pre)', fn: () => validateMaintenance({ workspace: root, strict }) },
     { name: 'curator-apply', fn: () => curatorApply({ workspace: root, write }) },
   ];
 
   if (repairSourcePaths) {
-    steps.push({ name: 'repair-source-paths', script: path.join(coreDir, 'repair-source-paths.js'), args: ['--workspace', root, ...(write ? ['--write'] : [])] });
+    steps.push({ name: 'repair-source-paths', fn: () => repairSourcePaths({ workspace: root, write }) });
   }
 
-  steps.push({ name: 'validate-maintenance(post)', script: path.join(coreDir, 'validate-maintenance.js'), args: ['--workspace', root, ...(strict ? ['--strict'] : [])] });
+  steps.push({ name: 'validate-maintenance(post)', fn: () => validateMaintenance({ workspace: root, strict }) });
 
   const results = [];
   for (const step of steps) {
+    const startedAt = Date.now();
     let result;
-    if (step.fn) {
-      const startedAt = Date.now();
-      try {
-        const parsed = await step.fn();
-        result = { name: step.name, ok: parsed.ok !== false, code: 0, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: '', parsed };
-      } catch (err) {
-        result = { name: step.name, ok: false, code: null, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: truncate(String(err)), parsed: null };
-      }
-    } else {
-      result = await runStep({ ...step, cwd: root, timeoutMs });
+    try {
+      const parsed = await step.fn();
+      result = { name: step.name, ok: parsed.ok !== false, code: 0, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: '', parsed };
+    } catch (err) {
+      result = { name: step.name, ok: false, code: null, signal: null, timed_out: false, duration_ms: Date.now() - startedAt, stdout: '', stderr: String(err), parsed: null };
     }
     results.push(result);
     if (!result.ok) break;
