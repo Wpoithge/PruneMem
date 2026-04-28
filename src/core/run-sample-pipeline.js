@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import process from 'node:process';
-import { spawn } from 'node:child_process';
 import { isMainModule } from '../lib/cli-entry.js';
-
-// TODO (Step 2b): Replace spawn() with import after Step 3 lib化:
-// - run-extract.js
-// - run-judge.js
-// - update-registries.js
+import { runExtract } from './run-extract.js';
+import { runJudge } from './run-judge.js';
+import { updateRegistries } from './update-registries.js';
 
 function parseArgs(argv) {
   return {
@@ -16,19 +13,6 @@ function parseArgs(argv) {
   };
 }
 
-async function runStep(script, args, cwd) {
-  return await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [script, ...args], { cwd, env: process.env });
-    let stdout = ''; let stderr = '';
-    child.stdout.on('data', (d) => { stdout += d.toString(); });
-    child.stderr.on('data', (d) => { stderr += d.toString(); });
-    child.on('error', reject);
-    child.on('close', (code) => {
-      if (code !== 0) return reject(new Error(stderr || stdout || `exit ${code}`));
-      resolve(JSON.parse(stdout));
-    });
-  });
-}
 
 /**
  * Run the sample extract → judge → update-registries pipeline.
@@ -43,19 +27,11 @@ export async function runSamplePipeline({
   mock = false,
 } = {}) {
   const root = path.resolve(workspace || process.cwd());
-  const core = path.join(root, 'src', 'core');
   const sampleDir = path.join(root, 'examples', 'pipeline', 'sample-run-01');
-  const extractArgs = ['--workspace', root, '--input', path.join(sampleDir, 'session-packet.json'), '--output', path.join(sampleDir, 'extracted.generated.json')];
-  const judgeArgs = ['--workspace', root, '--input', path.join(sampleDir, 'extracted.generated.json'), '--output', path.join(sampleDir, 'judged.generated.json')];
-  const updateArgs = ['--workspace', root, '--judged', path.join(sampleDir, 'judged.generated.json'), '--source-paths', path.join(sampleDir, 'apply.json'), '--memory-id', 'mem-example-generated', '--channel', 'webchat', '--agent', 'demo'];
-  if (mock) {
-    extractArgs.push('--mock');
-    judgeArgs.push('--mock');
-  }
   const steps = [];
-  steps.push(await runStep(path.join(core, 'run-extract.js'), extractArgs, root));
-  steps.push(await runStep(path.join(core, 'run-judge.js'), judgeArgs, root));
-  steps.push(await runStep(path.join(core, 'update-registries.js'), updateArgs, root));
+  steps.push(await runExtract({ workspace: root, input: path.join(sampleDir, 'session-packet.json'), output: path.join(sampleDir, 'extracted.generated.json'), mock }));
+  steps.push(await runJudge({ workspace: root, input: path.join(sampleDir, 'extracted.generated.json'), output: path.join(sampleDir, 'judged.generated.json'), mock }));
+  steps.push(await updateRegistries({ workspace: root, judged: path.join(sampleDir, 'judged.generated.json'), sourcePaths: path.join(sampleDir, 'apply.json'), memoryId: 'mem-example-generated', channel: 'webchat', agent: 'demo' }));
   return { ok: true, mock, steps };
 }
 
