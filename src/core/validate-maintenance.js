@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { isMainModule } from '../lib/cli-entry.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), strict: false };
@@ -36,9 +37,19 @@ function groupBy(rows, keyFn) {
   return m;
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  const root = path.resolve(args.workspace);
+/**
+ * Validate workspace registry for maintenance issues.
+ *
+ * @param {object} options
+ * @param {string} [options.workspace] - workspace root, defaults to cwd
+ * @param {boolean} [options.strict=false] - strict validation mode
+ * @returns {Promise<{ok: boolean, strict: boolean, counts: object, samples: object, notes: array, paths: object}>}
+ */
+export async function validateMaintenance({
+  workspace,
+  strict = false,
+} = {}) {
+  const root = path.resolve(workspace || process.cwd());
   const regDir = path.join(root, 'examples', 'registry');
   const runDir = path.join(root, 'examples', 'pipeline');
   const memoryMd = path.join(root, 'examples', 'MEMORY.example.md');
@@ -155,19 +166,19 @@ async function main() {
 
   const ok = missing.length === 0
     && badSourcePaths.length === 0
-    && (!args.strict || missingLifecycle.length === 0)
-    && (!args.strict || duplicateBullets.length === 0)
-    && (!args.strict || topicDanglingPointers.length === 0)
-    && (!args.strict || topicNoActivePointer.length === 0)
-    && (!args.strict || topicSingleActiveMismatch.length === 0)
-    && (!args.strict || dedupeDanglingPointers.length === 0)
-    && (!args.strict || dedupeNoActiveCanonical.length === 0)
-    && (!args.strict || dedupeCanonicalDrift.length === 0)
-    && (!args.strict || dedupeSingleActiveMismatch.length === 0);
+    && (!strict || missingLifecycle.length === 0)
+    && (!strict || duplicateBullets.length === 0)
+    && (!strict || topicDanglingPointers.length === 0)
+    && (!strict || topicNoActivePointer.length === 0)
+    && (!strict || topicSingleActiveMismatch.length === 0)
+    && (!strict || dedupeDanglingPointers.length === 0)
+    && (!strict || dedupeNoActiveCanonical.length === 0)
+    && (!strict || dedupeCanonicalDrift.length === 0)
+    && (!strict || dedupeSingleActiveMismatch.length === 0);
 
-  process.stdout.write(JSON.stringify({
+  return {
     ok,
-    strict: args.strict,
+    strict,
     counts: {
       memories: memories.length,
       lifecycle: lifecycle.length,
@@ -203,12 +214,20 @@ async function main() {
       pipeline: path.relative(root, runDir),
       memory_md: path.relative(root, memoryMd)
     }
-  }, null, 2) + '\n');
-
-  process.exit(ok ? 0 : 1);
+  };
 }
 
-main().catch((err) => {
-  console.error('[validate-maintenance] failed:', err);
-  process.exit(1);
-});
+// ─── CLI shell ─────────────────────────────────
+
+if (isMainModule(import.meta.url)) {
+  const args = parseArgs(process.argv);
+  validateMaintenance(args)
+    .then(result => {
+      process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+      process.exit(result.ok ? 0 : 1);
+    })
+    .catch(err => {
+      console.error('[validate-maintenance] failed:', err);
+      process.exit(1);
+    });
+}
