@@ -1,14 +1,28 @@
-[run-sample-pipeline] failed: Error: [run-extract] failed: {
-  "name": "ProviderError",
-  "code": "PROVIDER_AUTH_MISSING",
-  "message": "missing API key for PRUNEMEM_API_KEY",
-  "provider": "openai-compatible",
-  "status": null,
-  "retryable": false,
-  "details": null
+{
+  "ok": true,
+  "mock": true,
+  "steps": [
+    {
+      "ok": true,
+      "input": "examples/pipeline/sample-run-01/session-packet.json",
+      "output": "examples/pipeline/sample-run-01/extracted.generated.json",
+      "mock": true
+    },
+    {
+      "ok": true,
+      "input": "examples/pipeline/sample-run-01/extracted.generated.json",
+      "output": "examples/pipeline/sample-run-01/judged.generated.json",
+      "mock": true
+    },
+    {
+      "ok": true,
+      "inserted": 1,
+      "files": {
+        "topics": "examples/registry/topics.jsonl",
+        "dedupe": "examples/registry/dedupe-index.jsonl",
+        "lifecycle": "examples/registry/lifecycle.jsonl",
+        "memories": "examples/registry/memories.jsonl"
+      }
+    }
+  ]
 }
-
-    at ChildProcess.<anonymous> (file:///Users/yang/Desktop/PruneMem/src/core/run-sample-pipeline.js:27:37)
-    at ChildProcess.emit (node:events:509:20)
-    at maybeClose (node:internal/child_process:1108:16)
-    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
