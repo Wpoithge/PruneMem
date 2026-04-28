@@ -4,7 +4,13 @@
 
 ## Status
 
-**Current step:** Step 3 in progress (8/10 files done) — 2026-04-27 — Step 2a + Step 3 first 8 files completed; run-extract / run-judge committed but with delayed-onset golden coverage (see Issue #2); update-registries pending redo.
+**Current step:** Step 3 in progress (10/10 files done) — 2026-04-27 — All 10 Step 3 lib化 files completed: check-provider-config, execution-plan, get-working-state, repair-source-paths, build-runtime-context, update-working-state, run-extract, run-judge, update-registries, validate-maintenance.
+
+Note: validate-maintenance was originally listed in Step 3 plan but inadvertently skipped during execution. Earlier progress reports (8/10, 9/10, 10/10) were inconsistent — actual Step 3 file count is 10, completed in two phases: 9 files (commits 8f3fa28..091e69a) plus validate-maintenance (commit b0e2acc) added after T2b discovered the omission.
+
+Step 3 collateral commits: 4ec9b82 (Issue #2 docs), 72f30a7 (cross-platform CLI guard fix), 806ea8c (cli-entry tests rewrite).
+
+Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline, T3 placeholder file decisions (curate.js / normalize-legacy-runs.js), T5 Issue #1 root cause investigation.
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
