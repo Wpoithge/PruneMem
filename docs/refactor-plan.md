@@ -10,13 +10,13 @@ Note: validate-maintenance was originally listed in Step 3 plan but inadvertentl
 
 Step 3 collateral commits: 4ec9b82 (Issue #2 docs), 72f30a7 (cross-platform CLI guard fix), 806ea8c (cli-entry tests rewrite).
 
-Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test ✅, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline ✅, T3 placeholder file decisions ✅ (deleted as unused placeholders — no logic, no callers, no history), T5 Issue #1 root cause investigation.
+Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test ✅, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline ✅, T3 placeholder file decisions ✅ (deleted as unused placeholders — no logic, no callers, no history), T5 Issue #1 root cause investigation ✅ (diagnosed + mitigated, root-cause fix deferred to Step 4).
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
 ### Known issues
 
-- **Issue #1: `examples/registry/` contamination during execution.** `run-sample-pipeline` (and possibly other scripts) write into `examples/registry/` during execution. This contaminates the demo workspace and risks accidental commits. Need to investigate in Step 3 when refactoring `run-extract` / `run-judge` / `update-registries` which are likely the actual writers. **Mitigation until then:** always check `git status` after running these scripts and `git checkout -- examples/` if registry files changed.
+- **Issue #1: `examples/registry/` contamination during direct execution.** Diagnosed in T5 (Step 3 closeout) — root cause is `src/core/update-registries.js:66` hardcoding the registry write path with no dry-run guard. Mitigated by `scripts/check-examples-clean.sh` and `git checkout -- examples/registry/` workaround. Root-cause fix planned for Step 4 (paths.js abstraction). See `docs/known-issues.md` for full diagnosis.
 
 - **Issue #2: run-extract (commit 635498a) 和 run-judge (commit 5da411f) 的 golden baseline 在改造时被直接覆盖**（用 mock 模式输出替换），跳过了"先 commit mock baseline 再做改造"的正确流程。原因：Step 0 抓 golden 时这两个脚本因缺 API key 失败，抓到的是 PROVIDER_AUTH_MISSING 错误信息，从 Step 0 起就无回归价值。
 
