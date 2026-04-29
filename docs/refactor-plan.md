@@ -4,13 +4,53 @@
 
 ## Status
 
-**Current step:** Step 3 in progress (10/10 files done) — 2026-04-27 — All 10 Step 3 lib化 files completed: check-provider-config, execution-plan, get-working-state, repair-source-paths, build-runtime-context, update-working-state, run-extract, run-judge, update-registries, validate-maintenance.
+**Current step:** Step 3 completed ✓ — 2026-04-29
 
-Note: validate-maintenance was originally listed in Step 3 plan but inadvertently skipped during execution. Earlier progress reports (8/10, 9/10, 10/10) were inconsistent — actual Step 3 file count is 10, completed in two phases: 9 files (commits 8f3fa28..091e69a) plus validate-maintenance (commit b0e2acc) added after T2b discovered the omission.
+**Step 3 deliverables:**
 
-Step 3 collateral commits: 4ec9b82 (Issue #2 docs), 72f30a7 (cross-platform CLI guard fix), 806ea8c (cli-entry tests rewrite).
+10 core scripts converted to lib+CLI dual-mode (Pattern A or B per file):
+check-provider-config, execution-plan, get-working-state, repair-source-paths,
+build-runtime-context, update-working-state, run-extract, run-judge,
+update-registries, validate-maintenance.
 
-Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test ✅, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline ✅, T3 placeholder file decisions ✅ (deleted as unused placeholders — no logic, no callers, no history), T5 Issue #1 root cause investigation ✅ (diagnosed + mitigated, root-cause fix deferred to Step 4).
+Step 2b (spawn → import migration) completed:
+- maintain.js: validate-maintenance + repair-source-paths now in-process
+- run-sample-pipeline.js: run-extract + run-judge + update-registries now in-process
+- runStep helpers removed from both files
+- Behavior change: --timeout-ms in maintain is deprecated (no-op + stderr warning)
+
+Cross-cutting fixes:
+- 72f30a7: realpath-aware CLI entry detection (fileURLToPath alone fails on
+  macOS /tmp symlinks and spawn cross-path scenarios). Affects all 13 dual-mode
+  scripts via shared src/lib/cli-entry.js helper.
+
+Closeout tasks (T1–T5):
+- T1 ✅: run-sample-pipeline unit test added (commit 7bc152d). Closes Step 2a debt.
+- T2 ✅: covered by Step 2b commits (4b64db6, 4c86b3e).
+- T3 ✅: placeholder files curate.js + normalize-legacy-runs.js deleted (commit 045e0d4).
+- T4 ✅: this commit.
+- T5 ✅: Issue #1 diagnosed + mitigated (commit 8fed763). Root-cause fix deferred to Step 4.
+
+**Known issues at end of Step 3:**
+
+- Issue #1 (mitigated, deferred to Step 4): examples/registry/ contamination
+  during direct local execution. Mitigation: scripts/check-examples-clean.sh +
+  manual git checkout. Full details in docs/known-issues.md.
+- Issue #2 (closed): Step 0 captured invalid golden baselines (PROVIDER_AUTH_MISSING)
+  for run-extract, run-judge, run-sample-pipeline. All three regenerated using
+  --mock mode in commits 4ec9b82 and a4b8b45.
+
+**Total Step 3 commits:** 30 (git log --oneline 80b263c..73533ee | wc -l)
+
+**Step 4 (paths.js abstraction) entry point:**
+
+Step 4 should start by reading docs/known-issues.md Issue #1 — the root-cause
+fix plan there (introduce getPaths(preset) abstraction, default preset preserves
+examples/registry/ for backward compatibility, isolated preset for tests) is
+the natural shape of Step 4. The sole hardcoded write path identified is
+src/core/update-registries.js:66; src/core/curator-apply.js already has
+write=false default protection so its hardcoded examples/registry/ at line 131
+is read-only and lower priority.
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
@@ -18,11 +58,7 @@ Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test ✅, T2 (Step 2b
 
 - **Issue #1: `examples/registry/` contamination during direct execution.** Diagnosed in T5 (Step 3 closeout) — root cause is `src/core/update-registries.js:66` hardcoding the registry write path with no dry-run guard. Mitigated by `scripts/check-examples-clean.sh` and `git checkout -- examples/registry/` workaround. Root-cause fix planned for Step 4 (paths.js abstraction). See `docs/known-issues.md` for full diagnosis.
 
-- **Issue #2: run-extract (commit 635498a) 和 run-judge (commit 5da411f) 的 golden baseline 在改造时被直接覆盖**（用 mock 模式输出替换），跳过了"先 commit mock baseline 再做改造"的正确流程。原因：Step 0 抓 golden 时这两个脚本因缺 API key 失败，抓到的是 PROVIDER_AUTH_MISSING 错误信息，从 Step 0 起就无回归价值。
-
-  现状：经验证（2026-04-27 阶段 C2/C3），当前 golden 与当前代码 mock 输出一致，从这两个 commit 之后任何对 run-extract / run-judge 的改动都会被 golden diff 抓到。这两个文件的回归保护从 commit 时点开始生效，不溯及更早状态。
-
-  未来贡献者注意：如果 mock 模式实现本身被改动（比如 mock 数据生成逻辑、provider factory 的 mock branch），需要重新评估这两个 golden 是否需要重新生成。
+- **Issue #2: closed.** Step 0 captured PROVIDER_AUTH_MISSING as golden baseline for run-extract, run-judge, run-sample-pipeline. Regenerated using --mock mode in commits 4ec9b82 and a4b8b45. See docs/known-issues.md for full retrospective.
 
 每开始/结束一步时更新这里。格式 `Step N (in progress / completed) — YYYY-MM-DD — brief note`。
 
