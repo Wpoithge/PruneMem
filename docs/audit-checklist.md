@@ -1,5 +1,7 @@
 # Audit Checklist — Step 0
 
+> Note: curate.js / normalize-legacy-runs.js placeholders were deleted in T3 (Step 3 closeout). Original checklist below is preserved as historical archive.
+
 启动 Claude Code 后的第一个任务。**不改任何代码**，只对账并产出 `docs/audit-findings.md`，最后**停下来等用户确认**。
 
 ## Why this exists

@@ -22,7 +22,6 @@ prunemem/
 │   │   ├── update-registries.js
 │   │   ├── update-working-state.js
 │   │   ├── validate-maintenance.js
-│   │   ├── (curate.js / normalize-legacy-runs.js — placeholder, 待处理)
 │   │   └── index.js               ← 新增（Step 3 后），re-export 所有公开 API
 │   │
 │   ├── lib/                       算法 / 数据契约辅助（已有）

@@ -1,5 +1,7 @@
 # Audit Findings — 2026-04-26
 
+> Note: curate.js / normalize-legacy-runs.js placeholders were deleted in T3 (Step 3 closeout). Original audit records below are preserved as historical archive.
+
 ## Task 1: Core inventory
 
 | 文件 | 类型 | 备注 |

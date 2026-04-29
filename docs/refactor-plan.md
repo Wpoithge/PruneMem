@@ -10,7 +10,7 @@ Note: validate-maintenance was originally listed in Step 3 plan but inadvertentl
 
 Step 3 collateral commits: 4ec9b82 (Issue #2 docs), 72f30a7 (cross-platform CLI guard fix), 806ea8c (cli-entry tests rewrite).
 
-Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline, T3 placeholder file decisions (curate.js / normalize-legacy-runs.js), T5 Issue #1 root cause investigation.
+Pending Step 3 closeout tasks: T1 run-sample-pipeline unit test ✅, T2 (Step 2b) spawn → import in maintain & run-sample-pipeline ✅, T3 placeholder file decisions ✅ (deleted as unused placeholders — no logic, no callers, no history), T5 Issue #1 root cause investigation.
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
@@ -49,7 +49,7 @@ Audit 结论已被 plan 吸收，下面这些决定**不再讨论**（除非 Ste
 
 End state：
 - `src/core/*.js` 14 个真实脚本全部改成 lib+CLI 双模式（archive-session-v41 已是参考样本，但本身也要按统一签名复审）
-- 2 个 placeholder（curate / normalize-legacy-runs）单独处理（删除/移走/标注）
+- 2 个 placeholder（curate / normalize-legacy-runs）已删除（T3，无逻辑、无引用、无历史）
 - `src/lib/paths.js` 扩展为 layout preset 机制，14 个脚本里 25 处硬编码替换为 `getPaths(preset)` 调用
 - `src/mcp/server.js` 暴露 PruneMem 能力给 MCP 客户端
 - `src/hosts/openclaw/` 和 `src/hosts/hermes/` 按需新增（**注意：不是 `src/adapters/`**——后者已被 backend/provider 占用）
@@ -139,7 +139,7 @@ End state：
 
 **特别处理：**
 
-- **Placeholder（curate.js / normalize-legacy-runs.js）**：单独决定它们的命运（删 / 挪 `docs/roadmap/` / 加 deprecation 注释）。这是一个独立 commit：`chore: handle stale placeholder scripts`。
+- **Placeholder（curate.js / normalize-legacy-runs.js）**：已删除（T3，无逻辑、无引用、无历史）。
 - **`archive-session-v41.js` 重命名**：暂缓决定。Audit 显示 `runtime/archive-session.js` 已经存在并且是它依赖的库，core/v41 只是 CLI 入口。重命名会增加混淆（"哪个 archive-session 是哪个"）。**保留 v41 后缀，等 Step 6 host integration 上线后再综合考虑**。
 - **`--mock` 对齐**：`run-extract.js` 和 `run-judge.js` 加 `--mock` 时，看 `run-sample-pipeline.js` 现有的 mock 模式怎么实现，照抄。**不要发明新机制**。Commit 单独做：`feat(core): add --mock to run-extract and run-judge for deterministic testing`。
 
