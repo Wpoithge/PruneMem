@@ -32,34 +32,37 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
     },
   };
 
+  // custom preset merges override into the same base as default.
+  presets.custom = presets.default;
+
   const base = presets[preset];
   if (!base) {
     throw new Error(`unknown preset: ${preset}`);
   }
 
-  // Merge override into base. Explicit null in override is preserved.
+  // Merge override into base.
+  // - Unknown field names are silently ignored (§2.3).
+  // - undefined means "fallback to base", skip it.
+  // - null and other values pass through as-is.
   const merged = { ...base };
   if (override && typeof override === 'object') {
     for (const [key, value] of Object.entries(override)) {
-      if (value === null) {
-        merged[key] = null;
-      } else if (typeof value === 'string') {
-        merged[key] = value;
-      }
-      // Unknown fields or non-string/non-null values are silently ignored.
+      if (!(key in base)) continue;      // unknown field: silent ignore
+      if (value === undefined) continue; // fallback to base
+      merged[key] = value;               // null, string, number, etc.
     }
   }
 
   return {
     workspace: root,
-    registry: merged.registry,
-    registryRead: merged.registryRead,
-    pipeline: merged.pipeline,
-    pipelineRead: merged.pipelineRead,
-    workingMemory: merged.workingMemory,
-    memoryMd: merged.memoryMd,
+    registry:      merged.registry      ?? null,
+    registryRead:  merged.registryRead  ?? null,
+    pipeline:      merged.pipeline      ?? null,
+    pipelineRead:  merged.pipelineRead  ?? null,
+    workingMemory: merged.workingMemory ?? null,
+    memoryMd:      merged.memoryMd      ?? null,
     preset,
-    _raw: merged,
+    _raw: { workspace, preset, override },
   };
 }
 
@@ -73,5 +76,5 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
  * @property {string} workingMemory    - directory for working state
  * @property {string|null} memoryMd    - path to MEMORY.md (or null if preset doesn't use it)
  * @property {string} preset           - which preset was used
- * @property {object} _raw             - the raw config used (for debugging)
+ * @property {object} _raw             - the original input (for debugging)
  */
