@@ -13,7 +13,10 @@
 - **R1 风险（非标准 path.join 形态）：** 无。所有 examples/ 路径均使用标准 `path.join()`。
 - **意外发现：**
   1. `src/lib/paths.js` 已有默认值 `registryDir: './examples/registry'` 等，但未被任何 core 脚本消费（core 脚本全部直接 `path.join`）。
-  2. `src/runtime/load-config.js` 硬编码 `config/backend.json` 和 `config/backend.example.json`，不在 Step 4 范围内（runtime 模块不是 core 脚本）。
+  2. `src/runtime/load-config.js` 硬编码 `config/backend.json` 和 `config/backend.example.json`。
+     不在 Step 4 范围：config/ 是项目级基础设施路径（backend provider 配置），
+     不是 demo workspace 内容路径（examples/registry/pipeline/memoryMd）。
+     两类路径职责不同，不该混进 paths.js 抽象。
   3. `tests/regression/` 中的硬编码需要同步改造（Phase C 时处理）。
 
 ---
@@ -72,7 +75,7 @@
 | `src/lib/paths.js` | 3 | `registryDir: './examples/registry'` | 字符串 | — | 现有默认值，未被消费。Step 4 会重写整个模块 |
 | `src/lib/paths.js` | 4 | `pipelineDir: './examples/pipeline'` | 字符串 | — | 同上 |
 | `src/lib/paths.js` | 5 | `layersDir: './examples/layers'` | 字符串 | — | 同上 |
-| `src/runtime/load-config.js` | 6 | `path.join(workspace, 'config', 'backend.json')` | path.join | 读 | **不在 Step 4 范围**。runtime 模块，非 core 脚本 |
+| `src/runtime/load-config.js` | 6 | `path.join(workspace, 'config', 'backend.json')` | path.join | 读 | **不在 Step 4 范围**。config/ 是项目级基础设施路径，非 demo workspace 内容路径 |
 | `src/runtime/load-config.js` | 7 | `path.join(workspace, 'config', 'backend.example.json')` | path.join | 读 | 同上 |
 
 ---
@@ -190,7 +193,7 @@ export function defaultPaths() {
 Audit 未触发三类决策条件：
 
 1. ✅ **R1 风险：** 无。所有路径均为标准 `path.join` 形态。
-2. ✅ **范围扩大：** 无。所有硬编码均在预估的 12 个 core 脚本 + execution-plan.js 内。`src/runtime/load-config.js` 不在 Step 4 范围（runtime 模块）。
+2. ✅ **范围扩大：** 无。所有硬编码均在预估的 12 个 core 脚本 + execution-plan.js 内。`src/runtime/load-config.js` 的 config/ 路径是项目级基础设施配置，不是 demo workspace 内容路径，不纳入 paths.js 抽象。
 3. ✅ **D6 影响放大：** 无。仅 `update-registries.js` 一个文件需要加 dry-run guard。run-extract / run-judge 的无条件写是设计意图（pipeline artifact 生成）。
 
 **建议：** 可直接进入 Phase B，无需暂停确认。
