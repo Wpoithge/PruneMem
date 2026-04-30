@@ -10,4 +10,5 @@ coverage/
 tmp/
 *.tsbuildinfo
 examples/workspace/
+.prunemem-isolated/
 .claude/settings.local.json
