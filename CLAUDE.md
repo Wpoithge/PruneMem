@@ -5,9 +5,17 @@
 
 ## 🚦 Start here
 
-**第一次开会话时，先做 audit，不要直接改代码。** 读 `@docs/audit-checklist.md` 并按它执行，产出 `docs/audit-findings.md`，然后**停下来等用户确认**再进 Step 1。
+**当前阶段：Step 4（paths.js 抽象，Issue #1 根治）。** Step 0-3 已完成（commit `c4f54b8` 是 Step 3 墓碑）。
 
-为什么先 audit：CLAUDE.md 和 refactor-plan 是基于上下文推断写的，不一定 100% 反映当前代码。Audit 的目的是对账，发现差异，必要时修正 plan，再开始改造。
+**第一次开会话时**：
+
+1. 读 `@docs/refactor-plan.md` 确认 Status section 当前阶段
+2. 当前阶段如果是 Step 4，读 `@docs/paths-design.md` 全文（这是 Step 4 的执行 spec，D1-D6 已锁定）
+3. 复述对当前状态和下一步任务的理解给用户，**等用户确认后再动手**
+
+**不要**直接跑 `@docs/audit-checklist.md`——那是 Step 0 的任务，已完成（`docs/audit-findings.md` 是产出存档）。
+
+为什么要复述：CLAUDE.md 和各 spec 文档可能因状态变化滞后，启动时跟用户对账一次能避免基于过时假设动手。
 
 ## What this project is
 
@@ -153,9 +161,11 @@ Commit message 用 conventional commits：
 - `@docs/faq.md`
 
 **0.3 改造（这次工作）：**
-- `@docs/audit-checklist.md` — **Step 0 任务清单，启动后第一件事**
+- `@docs/audit-checklist.md` — Step 0 任务清单（已完成，历史档案）
+- `@docs/audit-findings.md` — Step 0 产出（已完成，历史档案）
 - `@docs/refactor-plan.md` — 改造步骤 + 当前进度
 - `@docs/refactor-pattern.md` — lib+CLI 双模式标准模板（含 curator-apply 完整 before/after）
 - `@docs/architecture-target.md` — 目标目录结构、各模块职责边界
 - `@docs/contracts.md` — session-packet 输入契约 + 输出格式说明
 - `@docs/test-strategy.md` — 用 node:test 给 core 加测试的约定
+- `@docs/paths-design.md` — Step 4 spec (paths.js abstraction, D1-D6 locked)
