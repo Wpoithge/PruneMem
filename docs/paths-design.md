@@ -185,6 +185,7 @@ Phase A 会做完整 audit。预估范围（待 confirm）：
 | `src/core/run-extract.js` | input/output 默认值 | 低 |
 | `src/core/run-judge.js` | 同上 | 低 |
 | `src/core/build-runtime-context.js` | working memory 读取 | 中（待 audit） |
+| `src/core/execution-plan.js` | working memory 读取 | 低（added in Phase A audit, commit 5be0295） |
 | `src/core/get-working-state.js` | 同上 | 中（待 audit） |
 | `src/core/update-working-state.js` | 同上 | 中（待 audit） |
 | `src/core/archive-session-v41.js` | session packet 读取路径 | 中 |
