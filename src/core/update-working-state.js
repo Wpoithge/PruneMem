@@ -73,6 +73,7 @@ export async function updateWorkingState({
   const runtimeContext = buildRuntimeContextFromWorkingState(next, { memoryVersion: input.memory_version || next.memory_version });
 
   if (write) {
+    await fs.mkdir(paths.workingMemory, { recursive: true });
     await fs.writeFile(finalStatePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(paths.workingMemory, 'session-demo.working-event.json'), JSON.stringify(event, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(paths.workingMemory, 'session-demo.runtime-context.json'), JSON.stringify(runtimeContext, null, 2) + '\n', 'utf8');
