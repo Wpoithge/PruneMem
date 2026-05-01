@@ -20,6 +20,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
       pipeline: path.join(root, 'examples', 'pipeline'),
       pipelineRead: path.join(root, 'examples', 'pipeline'),
       workingMemory: path.join(root, 'examples', 'working-memory'),
+      workingMemoryRead: path.join(root, 'examples', 'working-memory'),
       memoryMd: path.join(root, 'examples', 'MEMORY.example.md'),
     },
     isolated: {
@@ -28,6 +29,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
       pipeline: path.join(root, '.prunemem-isolated', 'pipeline'),
       pipelineRead: path.join(root, 'examples', 'pipeline'),
       workingMemory: path.join(root, '.prunemem-isolated', 'working-memory'),
+      workingMemoryRead: path.join(root, 'examples', 'working-memory'),
       memoryMd: path.join(root, '.prunemem-isolated', 'MEMORY.md'),
     },
   };
@@ -59,7 +61,8 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
     registryRead:  merged.registryRead  ?? null,
     pipeline:      merged.pipeline      ?? null,
     pipelineRead:  merged.pipelineRead  ?? null,
-    workingMemory: merged.workingMemory ?? null,
+    workingMemory:     merged.workingMemory     ?? null,
+    workingMemoryRead: merged.workingMemoryRead ?? null,
     memoryMd:      merged.memoryMd      ?? null,
     preset,
     _raw: { workspace, preset, override },
@@ -73,8 +76,9 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
  * @property {string} registryRead     - directory to READ registries
  * @property {string} pipeline         - directory for sample-run artifacts (write path)
  * @property {string} pipelineRead     - directory to READ pipeline fixtures
- * @property {string} workingMemory    - directory for working state
- * @property {string|null} memoryMd    - path to MEMORY.md (or null if preset doesn't use it)
+ * @property {string} workingMemory     - directory for working state (write path)
+ * @property {string} workingMemoryRead - directory to READ working memory state (= workingMemory, except for isolated)
+ * @property {string|null} memoryMd     - path to MEMORY.md (or null if preset doesn't use it)
  * @property {string} preset           - which preset was used
  * @property {object} _raw             - the original input (for debugging)
  */
