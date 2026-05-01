@@ -52,3 +52,15 @@ test('getPaths workspace defaults to process.cwd()', () => {
   const p = getPaths({});
   assert.equal(p.workspace, process.cwd());
 });
+
+test('getPaths default preset workingMemoryRead equals workingMemory', () => {
+  const p = getPaths({ workspace: '/foo' });
+  assert.equal(p.workingMemoryRead, p.workingMemory);
+  assert.equal(p.workingMemoryRead, '/foo/examples/working-memory');
+});
+
+test('getPaths isolated preset diverges working memory read and write', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'isolated' });
+  assert.equal(p.workingMemory, '/foo/.prunemem-isolated/working-memory');
+  assert.equal(p.workingMemoryRead, '/foo/examples/working-memory');
+});
