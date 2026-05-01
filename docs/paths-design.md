@@ -127,7 +127,22 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
 }
 ```
 
-`.prunemem-isolated/` 必须加进 `.gitignore`（Phase B1 commit 同步加）。
+.prunemem-isolated/` 必须加进 `.gitignore`（Phase B1 commit 同步加）。
+
+**重要契约：写路径父目录不保证存在**
+
+isolated preset 的写路径（如 `.prunemem-isolated/pipeline/sample-run-01/`）
+不保证父目录存在——`.prunemem-isolated/` 是 `.gitignore` 忽略的目录，
+clone 后不存在。消费方必须在 `writeFile`/`writeJsonl` 之前自行 ensureDir：
+
+```js
+await fs.mkdir(path.dirname(targetPath), { recursive: true });
+```
+
+default preset 下父目录通常存在（`examples/` 在 repo 里 git 跟踪）——
+但消费方 inline ensureDir 不会有副作用，建议写盘的所有 core 脚本统一加。
+
+参考实现：commit `479fc7a` 的 `run-extract.js` 和 `run-judge.js`。
 
 **消费方契约**：脚本里"读"动作用 `paths.registryRead`（registry）或 `paths.workingMemoryRead`（working memory），"写"动作用 `paths.registry` 或 `paths.workingMemory`。default preset 下读写相等，isolated 下不同。
 
