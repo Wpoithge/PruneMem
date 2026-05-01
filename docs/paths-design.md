@@ -79,7 +79,8 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
  * @property {string}  registryRead     - directory to READ registries (= registry, except for isolated)
  * @property {string}  pipeline         - directory for sample-run artifacts (write path)
  * @property {string}  pipelineRead     - directory to READ pipeline fixtures (= pipeline, except for isolated)
- * @property {string}  workingMemory    - directory for working state
+ * @property {string}  workingMemory    - directory for working state (write path)
+ * @property {string}  workingMemoryRead - directory to READ working memory state (= workingMemory, except for isolated)
  * @property {string|null} memoryMd     - path to MEMORY.md (or null if preset doesn't use it)
  * @property {string}  preset           - which preset was used (echo back)
  * @property {object}  _raw             - the raw config used (for debugging)
@@ -99,7 +100,8 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
   registryRead:  path.join(workspace, 'examples', 'registry'),  // = registry
   pipeline:      path.join(workspace, 'examples', 'pipeline'),
   pipelineRead:  path.join(workspace, 'examples', 'pipeline'),
-  workingMemory: path.join(workspace, 'examples', 'working-memory'),  // 待 audit 确认
+  workingMemory:     path.join(workspace, 'examples', 'working-memory'),
+  workingMemoryRead: path.join(workspace, 'examples', 'working-memory'),  // = workingMemory
   memoryMd:      path.join(workspace, 'examples', 'MEMORY.example.md'),
   preset:        'default',
 }
@@ -118,7 +120,8 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
   registryRead:  path.join(workspace, 'examples', 'registry'),                  // 读
   pipeline:      path.join(workspace, '.prunemem-isolated', 'pipeline'),
   pipelineRead:  path.join(workspace, 'examples', 'pipeline'),
-  workingMemory: path.join(workspace, '.prunemem-isolated', 'working-memory'),
+  workingMemory:     path.join(workspace, '.prunemem-isolated', 'working-memory'),  // 写
+  workingMemoryRead: path.join(workspace, 'examples', 'working-memory'),            // 读
   memoryMd:      path.join(workspace, '.prunemem-isolated', 'MEMORY.md'),
   preset:        'isolated',
 }
@@ -126,7 +129,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
 
 `.prunemem-isolated/` 必须加进 `.gitignore`（Phase B1 commit 同步加）。
 
-**消费方契约**：脚本里"读"动作用 `paths.registryRead`，"写"动作用 `paths.registry`。default preset 下两者相等，isolated 下不同。
+**消费方契约**：脚本里"读"动作用 `paths.registryRead`（registry）或 `paths.workingMemoryRead`（working memory），"写"动作用 `paths.registry` 或 `paths.workingMemory`。default preset 下读写相等，isolated 下不同。
 
 #### `custom`（host adapter 用，merge 模式 — D2 决议 = B）
 
@@ -580,6 +583,15 @@ grep -E "^import.*from.*['\"]\\.\\./" src/lib/paths.js  # 期望无输出
 | D4 | preset/override 暴露在哪几个函数 | C — 全部函数都接受可选 paths | 2026-04-30 |
 | D5 | CLI flag 暴露在哪几个 CLI | C — 13 个 CLI 全加 | 2026-04-30 |
 | D6 | default preset 是否加 dry-run guard | B — 加，breaking change | 2026-04-30 |
+
+**D1 实施细节修订记录（2026-04-30，C3 探查中发现）：**
+原 D1 决议"isolated preset 只改写、读路径仍走 examples/"应一致地应用到所有读路径。
+B1 commit `4f07984` 实现时遗漏了 working memory 的读写分离——working memory 在
+isolated 下读写都指向 `.prunemem-isolated/`，导致读操作（get-working-state、
+build-runtime-context）在 isolated 下读不到 demo 工作记忆。
+
+修订：working memory 也走 read/write 分离，加 `paths.workingMemoryRead` 字段。
+不修改 D1 决议本身，只更新实施细节。
 
 ---
 
