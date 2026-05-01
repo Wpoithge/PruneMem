@@ -9,3 +9,11 @@ test('repairSourcePaths - happy path with default workspace', async () => {
   assert.equal(typeof result.repaired, 'number');
   assert.ok(Array.isArray(result.actions));
 });
+
+test('repairSourcePaths with isolated preset does not throw', async () => {
+  const result = await repairSourcePaths({
+    workspace: '.',
+    preset: 'isolated'
+  });
+  assert.equal(result.ok, true);
+});

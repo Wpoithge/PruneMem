@@ -4,11 +4,18 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--write') out.write = true;
   }
@@ -31,9 +38,12 @@ function inferYm(memoryId) { const m = /^mem-(\d{4})(\d{2})/.exec(memoryId || ''
 export async function repairSourcePaths({
   workspace,
   write = false,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const regPath = path.join(root, 'examples', 'registry', 'memories.jsonl');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const regPath = path.join(paths.registry, 'memories.jsonl');
   const rows = await readJsonl(regPath);
   const actions = [];
   for (const row of rows) {
@@ -41,9 +51,9 @@ export async function repairSourcePaths({
     const ym = inferYm(row.memory_id);
     if (!ym) continue;
     const pipelineDirRel = path.join('examples', 'pipeline', ym, row.memory_id);
-    const pipelineDirAbs = path.join(root, pipelineDirRel);
+    const pipelineDirAbs = path.join(paths.pipeline, ym, row.memory_id);
     const targets = { packet: path.join(pipelineDirAbs, 'session-packet.json'), extract: path.join(pipelineDirAbs, 'extracted.json'), judge_input: path.join(pipelineDirAbs, 'judge-input.json'), judge: path.join(pipelineDirAbs, 'judged.json'), apply: path.join(pipelineDirAbs, 'apply.json') };
-    const missingFields = Object.entries(src).filter(([, rel]) => rel).filter(([, rel]) => !path.isAbsolute(rel)).filter(([, rel]) => !existsSync(path.join(root, rel))).map(([field]) => field);
+    const missingFields = Object.entries(src).filter(([, rel]) => rel).filter(([, rel]) => !path.isAbsolute(rel)).filter(([, rel]) => !existsSync(path.join(paths.workspace, rel))).map(([field]) => field);
     if (!missingFields.length) continue;
     const touched = [];
     if (missingFields.includes('packet')) { const changed = await writeJsonIfMissing(targets.packet, { repaired: true, memory_id: row.memory_id, fact_id: row.fact_id, note: 'session-packet.json placeholder reconstructed from registry because original pipeline artifact was missing.' }, { write }); if (changed) touched.push('packet'); }

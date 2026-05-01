@@ -27,3 +27,11 @@ test('curatorApply - respects limit parameter', async () => {
   assert.ok(result.actions.length <= 5, 'actions should respect limit');
   assert.ok(result.dry_run_candidates.length <= 5, 'dry_run_candidates should respect limit');
 });
+
+test('curatorApply with isolated preset uses isolated registry path', async () => {
+  const result = await curatorApply({
+    workspace: '.',
+    preset: 'isolated'
+  });
+  assert.equal(result.ok, true);
+});

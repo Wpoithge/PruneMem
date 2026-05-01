@@ -3,11 +3,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), write: false, limit: 100 };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--write') out.write = true;
     else if (a === '--limit') out.limit = Number(argv[++i] || 100);
@@ -126,9 +133,12 @@ export async function curatorApply({
   workspace,
   write = false,
   limit = 100,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const regDir = path.join(root, 'examples', 'registry');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const regDir = paths.registry;
   const memoriesPath = path.join(regDir, 'memories.jsonl');
   const lifecyclePath = path.join(regDir, 'lifecycle.jsonl');
   const topicsPath = path.join(regDir, 'topics.jsonl');
