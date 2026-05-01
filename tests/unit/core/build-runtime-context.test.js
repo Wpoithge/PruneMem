@@ -20,3 +20,11 @@ test('buildRuntimeContext - golden diff matches (masked)', async () => {
 
   assert.ok(comparison.equal, comparison.diff || 'Golden diff should match after masking');
 });
+
+test('buildRuntimeContext with isolated preset reads from examples/', async () => {
+  const result = await buildRuntimeContext({
+    workspace: '.',
+    preset: 'isolated'
+  });
+  assert.equal(result.ok, true);
+});

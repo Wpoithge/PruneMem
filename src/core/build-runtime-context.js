@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 import { buildContextBundle, buildRuntimeContextFromWorkingState } from '../working/state.js';
 import { buildExecutionContext } from '../runtime/execution-context.js';
 
@@ -21,16 +23,22 @@ async function readJson(filePath, fallback = null) {
  * @param {string} [options.workspace] - workspace root, defaults to cwd
  * @param {string} [options.state] - path to working-state.json
  * @param {string} [options.plan] - path to execution-plan.json
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, runtimeContext: object, executionContext: object|null, bundle: object}>}
  */
 export async function buildRuntimeContext({
   workspace,
   state: statePath,
   plan: planPath,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const finalStatePath = statePath || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
-  const finalPlanPath = planPath || path.join(root, 'examples', 'working-memory', 'session-demo.execution-plan.json');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const finalStatePath = statePath || path.join(paths.workingMemoryRead, 'session-demo.working-state.json');
+  const finalPlanPath = planPath || path.join(paths.workingMemoryRead, 'session-demo.execution-plan.json');
 
   const state = await readJson(finalStatePath, {});
   const plan = await readJson(finalPlanPath, null);
@@ -48,6 +56,7 @@ export async function buildRuntimeContext({
 // ─── CLI shell ─────────────────────────────────
 
 async function main() {
+  const presetArgs = parsePresetArgs(process.argv);
   const workspace = process.argv.includes('--workspace')
     ? process.argv[process.argv.indexOf('--workspace') + 1]
     : process.cwd();
@@ -57,7 +66,7 @@ async function main() {
   const plan = process.argv.includes('--plan')
     ? process.argv[process.argv.indexOf('--plan') + 1]
     : undefined;
-  const result = await buildRuntimeContext({ workspace, state, plan });
+  const result = await buildRuntimeContext({ workspace, state, plan, ...presetArgs });
   process.stdout.write(JSON.stringify(result, null, 2) + '\n');
 }
 

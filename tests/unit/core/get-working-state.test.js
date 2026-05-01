@@ -9,3 +9,11 @@ test('getWorkingState - happy path with default workspace', async () => {
   assert.equal(result.schema_version, 'prunemem.working-state.v1');
   assert.ok(result.session_key, 'should have session_key');
 });
+
+test('getWorkingState with isolated preset reads from examples/', async () => {
+  const result = await getWorkingState({
+    workspace: '.',
+    preset: 'isolated'
+  });
+  assert.ok(result);
+});

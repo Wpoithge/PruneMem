@@ -21,3 +21,13 @@ test('updateWorkingState - golden diff matches (masked)', async () => {
 
   assert.ok(comparison.equal, comparison.diff || 'Golden diff should match after masking');
 });
+
+test('updateWorkingState with isolated preset reads from examples/, would write to isolated', async () => {
+  const result = await updateWorkingState({
+    workspace: '.',
+    preset: 'isolated',
+    write: false
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.written, false);
+});

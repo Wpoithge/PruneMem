@@ -3,12 +3,19 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 import { buildRuntimeContextFromWorkingState, buildWorkingEvent, defaultWorkingState, mergeWorkingState } from '../working/state.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), input: null, state: null, write: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--input') out.input = argv[++i];
     else if (a === '--state') out.state = argv[++i];
@@ -33,6 +40,9 @@ async function readJson(filePath, fallback) {
  * @param {string} [options.input] - path to update-input.json
  * @param {string} [options.state] - path to working-state.json
  * @param {boolean} [options.write=false] - write updated state to disk
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, state: object, event: object, runtimeContext: object, written: boolean}>}
  */
 export async function updateWorkingState({
@@ -40,10 +50,13 @@ export async function updateWorkingState({
   input: inputPath,
   state: statePath,
   write = false,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const finalInputPath = inputPath || path.join(root, 'examples', 'working-memory', 'update-input.json');
-  const finalStatePath = statePath || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const finalInputPath = inputPath || path.join(paths.workingMemoryRead, 'update-input.json');
+  const finalStatePath = statePath || path.join(paths.workingMemoryRead, 'session-demo.working-state.json');
 
   const input = await readJson(finalInputPath, null);
   if (!input) throw new Error(`input not found: ${finalInputPath}`);
@@ -61,9 +74,9 @@ export async function updateWorkingState({
 
   if (write) {
     await fs.writeFile(finalStatePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
-    await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.working-event.json'), JSON.stringify(event, null, 2) + '\n', 'utf8');
-    await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.runtime-context.json'), JSON.stringify(runtimeContext, null, 2) + '\n', 'utf8');
-    await fs.writeFile(path.join(root, 'examples', 'working-memory', 'session-demo.runtime-context.txt'), `${runtimeContext.content}\n`, 'utf8');
+    await fs.writeFile(path.join(paths.workingMemory, 'session-demo.working-event.json'), JSON.stringify(event, null, 2) + '\n', 'utf8');
+    await fs.writeFile(path.join(paths.workingMemory, 'session-demo.runtime-context.json'), JSON.stringify(runtimeContext, null, 2) + '\n', 'utf8');
+    await fs.writeFile(path.join(paths.workingMemory, 'session-demo.runtime-context.txt'), `${runtimeContext.content}\n`, 'utf8');
   }
 
   return { ok: true, state: next, event, runtimeContext, written: write };
