@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 import { extractFacts } from '../extract/extract-facts.js';
 import { extractFactsPrompt } from '../runtime/prompt-templates.js';
 import { validateSessionPacket } from '../lib/validate-input.js';
@@ -10,8 +12,13 @@ import { describeProviderError } from '../runtime/provider-errors.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), input: null, output: null, mock: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--input') out.input = argv[++i];
     else if (a === '--output') out.output = argv[++i];
@@ -28,6 +35,9 @@ function parseArgs(argv) {
  * @param {string} [options.input] - path to session-packet.json
  * @param {string} [options.output] - path to write extracted.json
  * @param {boolean} [options.mock=false] - use mock output for deterministic testing
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, input: string, output: string, mock: boolean}>}
  */
 export async function runExtract({
@@ -35,10 +45,13 @@ export async function runExtract({
   input: inputPath,
   output: outputPath,
   mock = false,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const finalInputPath = inputPath || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'session-packet.json');
-  const finalOutputPath = outputPath || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'extracted.generated.json');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const finalInputPath = inputPath || path.join(paths.pipelineRead, 'sample-run-01', 'session-packet.json');
+  const finalOutputPath = outputPath || path.join(paths.pipeline, 'sample-run-01', 'extracted.generated.json');
   const input = JSON.parse(await fs.readFile(finalInputPath, 'utf8'));
   validateSessionPacket(input);
 
@@ -53,11 +66,12 @@ export async function runExtract({
       note: 'mock extract output'
     };
   } else {
-    result = await extractFacts(input, { workspace: root, prompt: extractFactsPrompt(input) });
+    result = await extractFacts(input, { workspace: paths.workspace, prompt: extractFactsPrompt(input) });
   }
 
+  await fs.mkdir(path.dirname(finalOutputPath), { recursive: true });
   await fs.writeFile(finalOutputPath, JSON.stringify(result, null, 2) + '\n', 'utf8');
-  return { ok: true, input: path.relative(root, finalInputPath), output: path.relative(root, finalOutputPath), mock };
+  return { ok: true, input: path.relative(paths.workspace, finalInputPath), output: path.relative(paths.workspace, finalOutputPath), mock };
 }
 
 // ─── CLI shell ─────────────────────────────────

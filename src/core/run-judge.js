@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 import { judgeFacts } from '../judge/judge-facts.js';
 import { judgeFactsPrompt } from '../runtime/prompt-templates.js';
 import { validateExtractedFacts } from '../lib/validate-input.js';
@@ -10,8 +12,13 @@ import { describeProviderError } from '../runtime/provider-errors.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), input: null, output: null, mock: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--input') out.input = argv[++i];
     else if (a === '--output') out.output = argv[++i];
@@ -28,6 +35,9 @@ function parseArgs(argv) {
  * @param {string} [options.input] - path to extracted.json
  * @param {string} [options.output] - path to write judged.json
  * @param {boolean} [options.mock=false] - use mock output for deterministic testing
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, input: string, output: string, mock: boolean}>}
  */
 export async function runJudge({
@@ -35,10 +45,13 @@ export async function runJudge({
   input: inputPath,
   output: outputPath,
   mock = false,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const finalInputPath = inputPath || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'extracted.generated.json');
-  const finalOutputPath = outputPath || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'judged.generated.json');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const finalInputPath = inputPath || path.join(paths.pipelineRead, 'sample-run-01', 'extracted.generated.json');
+  const finalOutputPath = outputPath || path.join(paths.pipeline, 'sample-run-01', 'judged.generated.json');
   const input = JSON.parse(await fs.readFile(finalInputPath, 'utf8'));
   validateExtractedFacts(input);
 
@@ -62,11 +75,12 @@ export async function runJudge({
       note: 'mock judge output'
     };
   } else {
-    result = await judgeFacts(input, { workspace: root, prompt: judgeFactsPrompt(input) });
+    result = await judgeFacts(input, { workspace: paths.workspace, prompt: judgeFactsPrompt(input) });
   }
 
+  await fs.mkdir(path.dirname(finalOutputPath), { recursive: true });
   await fs.writeFile(finalOutputPath, JSON.stringify(result, null, 2) + '\n', 'utf8');
-  return { ok: true, input: path.relative(root, finalInputPath), output: path.relative(root, finalOutputPath), mock };
+  return { ok: true, input: path.relative(paths.workspace, finalInputPath), output: path.relative(paths.workspace, finalOutputPath), mock };
 }
 
 // ─── CLI shell ─────────────────────────────────

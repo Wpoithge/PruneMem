@@ -32,3 +32,11 @@ test('archiveSessionV41 - golden diff matches (masked)', async () => {
 
   assert.ok(comparison.equal, comparison.diff || 'Golden diff should match after masking timestamps');
 });
+
+test('archiveSessionV41 with isolated preset reads from examples/', async () => {
+  const result = await archiveSessionV41({
+    workspace: '.',
+    preset: 'isolated'
+  });
+  assert.equal(result.ok, true);
+});

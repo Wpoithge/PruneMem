@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 import { archiveSession } from '../runtime/archive-session.js';
 
 async function readJson(filePath) {
@@ -17,6 +19,9 @@ async function readJson(filePath) {
  * @param {string} [options.packet] - path to session-packet.json
  * @param {string} [options.state] - path to working-state.json
  * @param {string} [options.memoryVersion='v4.1'] - memory version
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, archive: object}>}
  */
 export async function archiveSessionV41({
@@ -24,10 +29,13 @@ export async function archiveSessionV41({
   packet: packetPath,
   state: statePath,
   memoryVersion = 'v4.1',
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const finalPacketPath = packetPath || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'session-packet.json');
-  const finalStatePath = statePath || path.join(root, 'examples', 'working-memory', 'session-demo.working-state.json');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const finalPacketPath = packetPath || path.join(paths.pipelineRead, 'sample-run-01', 'session-packet.json');
+  const finalStatePath = statePath || path.join(paths.workingMemoryRead, 'session-demo.working-state.json');
 
   const packet = await readJson(finalPacketPath);
   const workingState = await readJson(finalStatePath);
@@ -39,8 +47,13 @@ export async function archiveSessionV41({
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), packet: null, state: null, memoryVersion: 'v4.1' };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--packet') out.packet = argv[++i];
     else if (a === '--state') out.state = argv[++i];
