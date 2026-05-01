@@ -2,14 +2,26 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { updateRegistries } from '../../../src/core/update-registries.js';
 
-test('updateRegistries - basic execution with workspace', async () => {
+test('updateRegistries default does not write (dry-run)', async () => {
   const result = await updateRegistries({ workspace: '.' });
-
-  assert.ok(result.ok);
+  assert.equal(result.ok, true);
+  assert.equal(result.write, false);
   assert.equal(typeof result.inserted, 'number');
-  assert.ok(result.files, 'should have files object');
-  assert.ok(result.files.topics, 'should have topics path');
-  assert.ok(result.files.dedupe, 'should have dedupe path');
-  assert.ok(result.files.lifecycle, 'should have lifecycle path');
-  assert.ok(result.files.memories, 'should have memories path');
+});
+
+test('updateRegistries returns files map regardless of write flag', async () => {
+  const result = await updateRegistries({ workspace: '.' });
+  assert.ok(result.files);
+  assert.match(result.files.memories, /memories\.jsonl$/);
+  assert.match(result.files.topics, /topics\.jsonl$/);
+});
+
+test('updateRegistries with isolated preset does not touch examples/', async () => {
+  const result = await updateRegistries({
+    workspace: '.',
+    preset: 'isolated',
+    write: false,
+  });
+  assert.equal(result.ok, true);
+  assert.match(result.files.memories, /\.prunemem-isolated.*memories\.jsonl$/);
 });

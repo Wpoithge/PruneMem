@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 
 async function ensureDir(dir) {
   await fs.mkdir(dir, { recursive: true });
@@ -32,10 +34,16 @@ async function writeJsonl(filePath, rows) {
 }
 
 function parseArgs(argv) {
-  const out = { workspace: process.cwd(), judged: null, sourcePaths: null, memoryId: null, channel: 'demo', agent: 'demo' };
+  const out = { workspace: process.cwd(), write: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
+    else if (a === '--write') out.write = true;
     else if (a === '--judged') out.judged = argv[++i];
     else if (a === '--source-paths') out.sourcePaths = argv[++i];
     else if (a === '--memory-id') out.memoryId = argv[++i];
@@ -59,15 +67,29 @@ function uniq(arr = []) {
  * @param {string} [options.memoryId] - memory id override
  * @param {string} [options.channel='demo'] - channel override
  * @param {string} [options.agent='demo'] - agent override
- * @returns {Promise<{ok: boolean, inserted: number, files: object}>}
+ * @param {boolean} [options.write=false] - enable writing registry files
+ * @param {string} [options.preset] - paths preset ('default' | 'isolated' | 'custom')
+ * @param {object} [options.override] - partial paths override for custom preset
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
+ * @returns {Promise<{ok: boolean, inserted: number, write: boolean, files: object}>}
  */
-export async function updateRegistries({ workspace, judged: judgedArg, sourcePaths: sourcePathsArg, memoryId: memoryIdArg, channel = 'demo', agent = 'demo' } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const regDir = path.join(root, 'examples', 'registry');
-  await ensureDir(regDir);
+export async function updateRegistries({
+  workspace,
+  judged: judgedArg,
+  sourcePaths: sourcePathsArg,
+  memoryId: memoryIdArg,
+  channel = 'demo',
+  agent = 'demo',
+  write = false,
+  preset,
+  override,
+  paths: paths_in,
+} = {}) {
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const regDir = paths.registry;
 
-  const judgedPath = judgedArg || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'judged.json');
-  const sourcePathsPath = sourcePathsArg || path.join(root, 'examples', 'pipeline', 'sample-run-01', 'apply.json');
+  const judgedPath = judgedArg || path.join(paths.pipelineRead, 'sample-run-01', 'judged.json');
+  const sourcePathsPath = sourcePathsArg || path.join(paths.pipelineRead, 'sample-run-01', 'apply.json');
   const judged = await readJson(judgedPath, { result: { items: [] } });
   const apply = await readJson(sourcePathsPath, { files: [], violations: [] });
   const items = judged?.result?.items || judged?.items || [];
@@ -156,21 +178,24 @@ export async function updateRegistries({ workspace, judged: judgedArg, sourcePat
     inserted += 1;
   }
 
-  await Promise.all([
-    writeJsonl(topicsPath, [...topics.values()]),
-    writeJsonl(dedupePath, [...dedupe.values()]),
-    writeJsonl(lifecyclePath, [...lifecycle.values()]),
-    writeJsonl(memoriesPath, [...memories.values()]),
-  ]);
+  if (write) {
+    await Promise.all([
+      writeJsonl(topicsPath, [...topics.values()]),
+      writeJsonl(dedupePath, [...dedupe.values()]),
+      writeJsonl(lifecyclePath, [...lifecycle.values()]),
+      writeJsonl(memoriesPath, [...memories.values()]),
+    ]);
+  }
 
   return {
     ok: true,
     inserted,
+    write,
     files: {
-      topics: path.relative(root, topicsPath),
-      dedupe: path.relative(root, dedupePath),
-      lifecycle: path.relative(root, lifecyclePath),
-      memories: path.relative(root, memoriesPath),
+      topics: path.relative(paths.workspace, topicsPath),
+      dedupe: path.relative(paths.workspace, dedupePath),
+      lifecycle: path.relative(paths.workspace, lifecyclePath),
+      memories: path.relative(paths.workspace, memoriesPath),
     }
   };
 }
