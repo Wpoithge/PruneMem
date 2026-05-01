@@ -56,12 +56,13 @@ export async function updateWorkingState({
 } = {}) {
   const paths = paths_in ?? getPaths({ workspace, preset, override });
   const finalInputPath = inputPath || path.join(paths.workingMemoryRead, 'update-input.json');
-  const finalStatePath = statePath || path.join(paths.workingMemoryRead, 'session-demo.working-state.json');
+  const finalStateWritePath = statePath || path.join(paths.workingMemory, 'session-demo.working-state.json');
+  const finalStateReadPath = statePath || path.join(paths.workingMemoryRead, 'session-demo.working-state.json');
 
   const input = await readJson(finalInputPath, null);
   if (!input) throw new Error(`input not found: ${finalInputPath}`);
 
-  const current = await readJson(finalStatePath, defaultWorkingState(input.seed || {}));
+  const current = await readJson(finalStateReadPath, defaultWorkingState(input.seed || {}));
   const next = mergeWorkingState(current, { ...(input.delta || {}), memory_version: input.memory_version || input.delta?.memory_version }, input.policy || {});
   const event = buildWorkingEvent({
     sessionKey: next.session_key,
@@ -74,7 +75,7 @@ export async function updateWorkingState({
 
   if (write) {
     await fs.mkdir(paths.workingMemory, { recursive: true });
-    await fs.writeFile(finalStatePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
+    await fs.writeFile(finalStateWritePath, JSON.stringify(next, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(paths.workingMemory, 'session-demo.working-event.json'), JSON.stringify(event, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(paths.workingMemory, 'session-demo.runtime-context.json'), JSON.stringify(runtimeContext, null, 2) + '\n', 'utf8');
     await fs.writeFile(path.join(paths.workingMemory, 'session-demo.runtime-context.txt'), `${runtimeContext.content}\n`, 'utf8');

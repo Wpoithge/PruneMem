@@ -23,9 +23,7 @@ test('updateWorkingState - golden diff matches (masked)', async () => {
 });
 
 test('updateWorkingState with isolated preset writes to .prunemem-isolated/', async () => {
-  const { existsSync, rmSync, readFileSync, writeFileSync } = await import('node:fs');
-  const stateFile = 'examples/working-memory/session-demo.working-state.json';
-  const original = readFileSync(stateFile, 'utf8');
+  const { existsSync, rmSync } = await import('node:fs');
 
   const result = await updateWorkingState({
     workspace: '.',
@@ -35,7 +33,6 @@ test('updateWorkingState with isolated preset writes to .prunemem-isolated/', as
   assert.equal(result.ok, true);
   assert.equal(result.written, true);
 
-  writeFileSync(stateFile, original, 'utf8');
   if (existsSync('.prunemem-isolated')) {
     rmSync('.prunemem-isolated', { recursive: true, force: true });
   }
