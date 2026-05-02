@@ -15,3 +15,25 @@ test('validateMaintenance - strict mode flag passes through', async () => {
 
   assert.equal(result.strict, true);
 });
+
+test('validateMaintenance with custom preset memoryMd=null skips MEMORY.md checks', async () => {
+  const result = await validateMaintenance({
+    workspace: '.',
+    preset: 'custom',
+    override: { memoryMd: null }
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.paths.memory_md, null);
+  assert.equal(result.counts.duplicate_memory_bullets, 0);
+});
+
+test('validateMaintenance with isolated preset returns examples/ in paths field', async () => {
+  const result = await validateMaintenance({
+    workspace: '.',
+    preset: 'isolated'
+  });
+
+  assert.equal(result.paths.registry, 'examples/registry');
+  assert.equal(result.paths.pipeline, 'examples/pipeline');
+});

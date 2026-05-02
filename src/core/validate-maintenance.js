@@ -3,11 +3,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { isMainModule } from '../lib/cli-entry.js';
+import { getPaths } from '../lib/paths.js';
+import { parsePresetArgs } from '../lib/cli-args.js';
 
 function parseArgs(argv) {
   const out = { workspace: process.cwd(), strict: false };
+  const presetArgs = parsePresetArgs(argv);
+  Object.assign(out, presetArgs);
+
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === '--preset' || a === '--paths') { i++; continue; }
+
     if (a === '--workspace') out.workspace = argv[++i];
     else if (a === '--strict') out.strict = true;
   }
@@ -43,28 +50,34 @@ function groupBy(rows, keyFn) {
  * @param {object} options
  * @param {string} [options.workspace] - workspace root, defaults to cwd
  * @param {boolean} [options.strict=false] - strict validation mode
+ * @param {string} [options.preset] - paths preset
+ * @param {object} [options.override] - partial paths override
+ * @param {object} [options.paths] - pre-resolved paths (skips getPaths call)
  * @returns {Promise<{ok: boolean, strict: boolean, counts: object, samples: object, notes: array, paths: object}>}
  */
 export async function validateMaintenance({
   workspace,
   strict = false,
+  preset,
+  override,
+  paths: paths_in,
 } = {}) {
-  const root = path.resolve(workspace || process.cwd());
-  const regDir = path.join(root, 'examples', 'registry');
-  const runDir = path.join(root, 'examples', 'pipeline');
-  const memoryMd = path.join(root, 'examples', 'MEMORY.example.md');
+  const paths = paths_in ?? getPaths({ workspace, preset, override });
+  const regDir = paths.registryRead;
+  const runDir = paths.pipelineRead;
+  const memoryMd = paths.memoryMd;
 
   const required = [
     path.join(regDir, 'topics.jsonl'),
     path.join(regDir, 'dedupe-index.jsonl'),
     path.join(regDir, 'lifecycle.jsonl'),
     path.join(regDir, 'memories.jsonl'),
-    memoryMd,
+    ...(memoryMd ? [memoryMd] : []),
   ];
 
   const missing = [];
   for (const p of required) {
-    if (!(await exists(p))) missing.push(path.relative(root, p));
+    if (!(await exists(p))) missing.push(path.relative(paths.workspace, p));
   }
 
   const memories = await readJsonl(path.join(regDir, 'memories.jsonl'));
@@ -82,7 +95,7 @@ export async function validateMaintenance({
     const sp = row.source_paths || {};
     for (const [k, rel] of Object.entries(sp)) {
       if (!rel) continue;
-      const full = path.join(root, rel);
+      const full = path.join(paths.workspace, rel);
       if (!(await exists(full))) badSourcePaths.push({ memory_id: row.memory_id, field: k, path: rel });
     }
   }
@@ -139,14 +152,16 @@ export async function validateMaintenance({
   }
 
   let memoryText = '';
-  try { memoryText = await fs.readFile(memoryMd, 'utf8'); } catch {}
   const duplicateBullets = [];
-  const seen = new Set();
-  for (const line of memoryText.split('\n')) {
-    if (!/^\s*[-*]\s+/.test(line)) continue;
-    const key = line.replace(/^\s*[-*]\s+/, '').replace(/[`'"“”‘’]/g, '').replace(/\s+/g, ' ').trim();
-    if (seen.has(key)) duplicateBullets.push(line.trim());
-    seen.add(key);
+  if (memoryMd) {
+    try { memoryText = await fs.readFile(memoryMd, 'utf8'); } catch {}
+    const seen = new Set();
+    for (const line of memoryText.split('\n')) {
+      if (!/^\s*[-*]\s+/.test(line)) continue;
+      const key = line.replace(/^\s*[-*]\s+/, '').replace(/[`'"“”‘’]/g, '').replace(/\s+/g, ' ').trim();
+      if (seen.has(key)) duplicateBullets.push(line.trim());
+      seen.add(key);
+    }
   }
 
   const notes = [];
@@ -210,9 +225,9 @@ export async function validateMaintenance({
     },
     notes,
     paths: {
-      registry: path.relative(root, regDir),
-      pipeline: path.relative(root, runDir),
-      memory_md: path.relative(root, memoryMd)
+      registry: path.relative(paths.workspace, regDir),
+      pipeline: path.relative(paths.workspace, runDir),
+      memory_md: memoryMd === null ? null : path.relative(paths.workspace, memoryMd),
     }
   };
 }
