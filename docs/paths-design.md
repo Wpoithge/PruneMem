@@ -82,6 +82,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
  * @property {string}  workingMemory    - directory for working state (write path)
  * @property {string}  workingMemoryRead - directory to READ working memory state (= workingMemory, except for isolated)
  * @property {string|null} memoryMd     - path to MEMORY.md (or null if preset doesn't use it)
+ * @property {string|null} memoryMdRead - path to MEMORY.md to READ (= memoryMd, except for isolated)
  * @property {string}  preset           - which preset was used (echo back)
  * @property {object}  _raw             - the raw config used (for debugging)
  */
@@ -103,6 +104,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
   workingMemory:     path.join(workspace, 'examples', 'working-memory'),
   workingMemoryRead: path.join(workspace, 'examples', 'working-memory'),  // = workingMemory
   memoryMd:      path.join(workspace, 'examples', 'MEMORY.example.md'),
+  memoryMdRead:  path.join(workspace, 'examples', 'MEMORY.example.md'),  // = memoryMd
   preset:        'default',
 }
 ```
@@ -122,7 +124,8 @@ export function getPaths({ workspace, preset = 'default', override } = {}) { ...
   pipelineRead:  path.join(workspace, 'examples', 'pipeline'),
   workingMemory:     path.join(workspace, '.prunemem-isolated', 'working-memory'),  // 写
   workingMemoryRead: path.join(workspace, 'examples', 'working-memory'),            // 读
-  memoryMd:      path.join(workspace, '.prunemem-isolated', 'MEMORY.md'),
+  memoryMd:      path.join(workspace, '.prunemem-isolated', 'MEMORY.md'),         // 写
+  memoryMdRead:  path.join(workspace, 'examples', 'MEMORY.example.md'),           // 读
   preset:        'isolated',
 }
 ```
@@ -611,6 +614,23 @@ build-runtime-context）在 isolated 下读不到 demo 工作记忆。
 
 修订：working memory 也走 read/write 分离，加 `paths.workingMemoryRead` 字段。
 不修改 D1 决议本身，只更新实施细节。
+
+**D1 二次实施修订（2026-05-02，C6 探查中发现）：**
+原 D1 实施和 9e2d84a 修订都按"working memory 加 read/write 分离"处理，但
+memoryMd 字段没同步处理——isolated preset 下 memoryMd 指向 `.prunemem-isolated/MEMORY.md`
+（写路径），而该文件在 isolated 下不存在（用户 clone 后 `.prunemem-isolated/` 是 `.gitignore` 忽略目录）。
+
+C6 改造 maintain.js 时，validateMaintenance 在 isolated preset 下检查 required files
+报错"missing required files: .prunemem-isolated/MEMORY.md"——D1 精神（读保留 examples/）
+没有应用到 memoryMd 字段。
+
+修订：memoryMd 也走 read/write 分离，加 `paths.memoryMdRead` 字段。
+- default preset: memoryMdRead = memoryMd = examples/MEMORY.example.md
+- isolated preset: memoryMdRead = examples/MEMORY.example.md (读)
+                   memoryMd = .prunemem-isolated/MEMORY.md (写，预留未来 host 写需求)
+
+不修改 D1 决议本身，只更新实施细节。这是 D1 第二次实施修订，第一次是 working memory
+（commits 9e2d84a/92cc6f3/42651d0）。
 
 **C1 承诺修订记录（2026-05-02，C6 实施前发现）：**
 C1 (commit `6ebf02a`) commit message body 承诺："run-sample-pipeline.js
