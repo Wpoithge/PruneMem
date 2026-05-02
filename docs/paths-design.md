@@ -261,8 +261,11 @@ updateRegistries(args).then(...)
 ⚠️ **D6 breaking change 影响**：
 - `node src/core/update-registries.js --workspace .` 之前会写盘，现在默认 dry-run
 - 现有 `tests/regression/` 里如果有依赖"跑完 update-registries 后 examples/registry/ 内容"的 check，需要在 Phase C1 改造时一起调整为传 `--write`
-- `run-sample-pipeline` 内部调用 `updateRegistries` 时必须显式传 `write: true`（否则 pipeline 等于空跑）
-- `maintain` 调用 `updateRegistries` 链路同理
+- `run-sample-pipeline` 加自己的 `--write` flag，propagate 给下游 `updateRegistries`。
+  默认 dry-run，跟 `update-registries` 行为一致。原 C1 commit message 提过的
+  "internal write: true" 方案在 C6 实施时修订——内部硬编码 `write: true` 会
+  让 sample pipeline 默认污染 demo workspace，部分回退 Issue #1 修复。
+- `maintain` 同理：通过自身 `--write` flag propagate，内部不硬编码。
 
 详见 §5.3 CHANGELOG。
 
@@ -532,7 +535,8 @@ C5. `refactor(core): use getPaths in validate-maintenance with memoryMd null gua
 
 C6. `refactor(core): propagate preset/override through maintain + run-sample-pipeline`
 - 顶层 entry 加 preset/override 解析
-- 内部调用下游时显式传 `write: true`（适配 D6 breaking）
+- 把 `run-sample-pipeline` 的 `sampleDir` 硬编码替换为 `paths.pipelineRead`
+- propagate 顶层 `--write` flag 给 `updateRegistries`（修订 C1 承诺：内部不硬编码 `write: true`）
 
 ### Phase D：测试 + 文档（3 commit）
 
@@ -607,6 +611,15 @@ build-runtime-context）在 isolated 下读不到 demo 工作记忆。
 
 修订：working memory 也走 read/write 分离，加 `paths.workingMemoryRead` 字段。
 不修改 D1 决议本身，只更新实施细节。
+
+**C1 承诺修订记录（2026-05-02，C6 实施前发现）：**
+C1 (commit `6ebf02a`) commit message body 承诺："run-sample-pipeline.js
+and maintain.js will be updated in subsequent Phase C commits to pass
+write: true to their internal updateRegistries calls"。
+
+C6 实施时发现这条承诺会让 sample-pipeline / maintain 默认写盘，回退 D6
+的 Issue #1 修复。修订：两个文件都加自己的 `--write` flag，propagate 给下游。
+默认 dry-run，跟 update-registries 一致。
 
 ---
 
