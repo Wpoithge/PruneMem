@@ -17,6 +17,7 @@
     {
       "ok": true,
       "inserted": 1,
+      "write": false,
       "files": {
         "topics": "examples/registry/topics.jsonl",
         "dedupe": "examples/registry/dedupe-index.jsonl",
