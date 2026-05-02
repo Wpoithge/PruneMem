@@ -57,6 +57,14 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
     }
   }
 
+  // D3 coupling (after D1 second revision):
+  // host opts out of MEMORY.md by passing { memoryMd: null }.
+  // Couple memoryMdRead so consumers reading paths.memoryMdRead see null.
+  // See docs/paths-design.md §7.2 "D3 implementation revision".
+  if (override && Object.prototype.hasOwnProperty.call(override, 'memoryMd') && override.memoryMd === null) {
+    merged.memoryMdRead = null;
+  }
+
   return {
     workspace: root,
     registry:      merged.registry      ?? null,
