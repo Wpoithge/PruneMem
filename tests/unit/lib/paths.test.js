@@ -64,3 +64,15 @@ test('getPaths isolated preset diverges working memory read and write', () => {
   assert.equal(p.workingMemory, '/foo/.prunemem-isolated/working-memory');
   assert.equal(p.workingMemoryRead, '/foo/examples/working-memory');
 });
+
+test('getPaths default preset memoryMdRead equals memoryMd', () => {
+  const p = getPaths({ workspace: '/foo' });
+  assert.equal(p.memoryMdRead, p.memoryMd);
+  assert.equal(p.memoryMdRead, '/foo/examples/MEMORY.example.md');
+});
+
+test('getPaths isolated preset diverges MEMORY.md read and write', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'isolated' });
+  assert.equal(p.memoryMd, '/foo/.prunemem-isolated/MEMORY.md');
+  assert.equal(p.memoryMdRead, '/foo/examples/MEMORY.example.md');
+});
