@@ -76,3 +76,27 @@ test('getPaths isolated preset diverges MEMORY.md read and write', () => {
   assert.equal(p.memoryMd, '/foo/.prunemem-isolated/MEMORY.md');
   assert.equal(p.memoryMdRead, '/foo/examples/MEMORY.example.md');
 });
+
+test('getPaths override memoryMd=null couples memoryMdRead to null (D3 revision)', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'custom', override: { memoryMd: null } });
+  assert.equal(p.memoryMd, null);
+  assert.equal(p.memoryMdRead, null);
+});
+
+test('getPaths override memoryMdRead=null does NOT couple memoryMd (one-way coupling)', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'custom', override: { memoryMdRead: null } });
+  assert.equal(p.memoryMd, '/foo/examples/MEMORY.example.md');
+  assert.equal(p.memoryMdRead, null);
+});
+
+test('getPaths override memoryMd as string does NOT couple memoryMdRead', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'custom', override: { memoryMd: '/custom/MEMORY.md' } });
+  assert.equal(p.memoryMd, '/custom/MEMORY.md');
+  assert.equal(p.memoryMdRead, '/foo/examples/MEMORY.example.md');
+});
+
+test('getPaths isolated preset without memoryMd override leaves both fields independent', () => {
+  const p = getPaths({ workspace: '/foo', preset: 'isolated' });
+  assert.equal(p.memoryMd, '/foo/.prunemem-isolated/MEMORY.md');
+  assert.equal(p.memoryMdRead, '/foo/examples/MEMORY.example.md');
+});
