@@ -29,3 +29,40 @@ test('runSamplePipeline - mock mode produces extract → judge → update-regist
   assert.ok(result.steps[2].files);
   assert.match(result.steps[2].files.memories, /memories\.jsonl$/);
 });
+
+test('runSamplePipeline with isolated preset reads from examples/, runs without write', async () => {
+  const result = await runSamplePipeline({
+    workspace: '.',
+    preset: 'isolated',
+    mock: true,
+    write: false
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.steps.length, 3);
+  const updateStep = result.steps[2];
+  assert.equal(updateStep.write, false);
+
+  const { existsSync, rmSync } = await import('node:fs');
+  if (existsSync('.prunemem-isolated')) {
+    rmSync('.prunemem-isolated', { recursive: true, force: true });
+  }
+});
+
+test('runSamplePipeline propagates write=true to updateRegistries', async () => {
+  const result = await runSamplePipeline({
+    workspace: '.',
+    preset: 'isolated',
+    mock: true,
+    write: true
+  });
+
+  assert.equal(result.ok, true);
+  const updateStep = result.steps[2];
+  assert.equal(updateStep.write, true);
+
+  const { existsSync, rmSync } = await import('node:fs');
+  if (existsSync('.prunemem-isolated')) {
+    rmSync('.prunemem-isolated', { recursive: true, force: true });
+  }
+});

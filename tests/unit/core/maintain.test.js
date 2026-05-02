@@ -22,3 +22,22 @@ test('maintain - golden diff matches (masked)', async () => {
 
   assert.ok(comparison.equal, comparison.diff || 'Golden diff should match after masking');
 });
+
+test('maintain with isolated preset propagates paths to all 4 steps', async () => {
+  const result = await maintain({
+    workspace: '.',
+    preset: 'isolated',
+    strict: false,
+    write: false
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.summary.steps_total, 3);
+  assert.equal(result.summary.steps_ok, 3);
+
+  // cleanup
+  const { existsSync, rmSync } = await import('node:fs');
+  if (existsSync('.prunemem-isolated')) {
+    rmSync('.prunemem-isolated', { recursive: true, force: true });
+  }
+});

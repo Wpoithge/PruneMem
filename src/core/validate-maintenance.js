@@ -65,7 +65,7 @@ export async function validateMaintenance({
   const paths = paths_in ?? getPaths({ workspace, preset, override });
   const regDir = paths.registryRead;
   const runDir = paths.pipelineRead;
-  const memoryMd = paths.memoryMd;
+  const memoryMd = paths.memoryMdRead;
 
   const required = [
     path.join(regDir, 'topics.jsonl'),
