@@ -22,6 +22,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
       workingMemory: path.join(root, 'examples', 'working-memory'),
       workingMemoryRead: path.join(root, 'examples', 'working-memory'),
       memoryMd: path.join(root, 'examples', 'MEMORY.example.md'),
+      memoryMdRead: path.join(root, 'examples', 'MEMORY.example.md'),
     },
     isolated: {
       registry: path.join(root, '.prunemem-isolated', 'registry'),
@@ -31,6 +32,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
       workingMemory: path.join(root, '.prunemem-isolated', 'working-memory'),
       workingMemoryRead: path.join(root, 'examples', 'working-memory'),
       memoryMd: path.join(root, '.prunemem-isolated', 'MEMORY.md'),
+      memoryMdRead: path.join(root, 'examples', 'MEMORY.example.md'),
     },
   };
 
@@ -64,6 +66,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
     workingMemory:     merged.workingMemory     ?? null,
     workingMemoryRead: merged.workingMemoryRead ?? null,
     memoryMd:      merged.memoryMd      ?? null,
+    memoryMdRead:  merged.memoryMdRead  ?? null,
     preset,
     _raw: { workspace, preset, override },
   };
@@ -79,6 +82,7 @@ export function getPaths({ workspace, preset = 'default', override } = {}) {
  * @property {string} workingMemory     - directory for working state (write path)
  * @property {string} workingMemoryRead - directory to READ working memory state (= workingMemory, except for isolated)
  * @property {string|null} memoryMd     - path to MEMORY.md (or null if preset doesn't use it)
+ * @property {string|null} memoryMdRead - path to MEMORY.md to READ (= memoryMd, except for isolated)
  * @property {string} preset           - which preset was used
  * @property {object} _raw             - the original input (for debugging)
  */
