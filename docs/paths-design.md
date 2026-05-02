@@ -149,6 +149,8 @@ default preset 下父目录通常存在（`examples/` 在 repo 里 git 跟踪）
 
 **消费方契约**：脚本里"读"动作用 `paths.registryRead`（registry）或 `paths.workingMemoryRead`（working memory），"写"动作用 `paths.registry` 或 `paths.workingMemory`。default preset 下读写相等，isolated 下不同。
 
+消费方 D3 guard 应使用 `paths.memoryMdRead === null`（而不是 `paths.memoryMd === null`），因为消费方用 `memoryMdRead` 实际读取。`memoryMd` 是写位置（保留给未来扩展）。`paths.js` 在 `override.memoryMd` 为 `null` 时联动设置 `memoryMdRead = null`，保证 host 传 `{ memoryMd: null }` 仍能正确表达 opt-out。
+
 #### `custom`（host adapter 用，merge 模式 — D2 决议 = B）
 
 ```js
@@ -168,15 +170,27 @@ getPaths({
 
 #### memoryMd null 的语义（D3 决议 = A）
 
-`memoryMd === null` 表示该 preset / 该 host **决定不维护 MEMORY.md**。消费方必须 guard：
+D3 (memoryMd null guard): host 通过 `override: { memoryMd: null }` 表示
+"该 preset 不维护 MEMORY.md"。`paths.js` 接收到 `memoryMd: null` 时，
+联动把 `memoryMdRead` 也设为 `null`（D1 第二次修订引入 `memoryMdRead` 字段后的
+联动逻辑）。消费方用 `paths.memoryMdRead === null` 作为最终 opt-out 信号——
+这是消费方实际读取的路径字段。
+
+具体规则：
+- `override.memoryMd` 显式为 `null` 时：`merged.memoryMd = null`, `merged.memoryMdRead = null`
+- `override.memoryMdRead` 显式为 `null` 而 `memoryMd` 不为 `null` 时：仅 `merged.memoryMdRead = null`
+  （罕见用法，host 想"读不到 demo 但仍声明写位置" — 不推荐但允许）
+- 默认情况（不传 override）：两个字段独立，跟 preset 默认值
+
+消费方 guard 示例：
 
 ```js
 // validate-maintenance.js
-if (paths.memoryMd) {
+if (paths.memoryMdRead) {
   // 走 MEMORY.md 校验逻辑
 } else {
   // 跳过该 preset 不维护
-  result.checks.memory_md = { skipped: true, reason: 'preset has no memoryMd' };
+  result.checks.memory_md = { skipped: true, reason: 'preset has no memoryMdRead' };
 }
 ```
 
@@ -601,7 +615,7 @@ grep -E "^import.*from.*['\"]\\.\\./" src/lib/paths.js  # 期望无输出
 |---|---|---|---|
 | D1 | isolated preset 改写还是改读写 | A — 只改写路径，读路径仍走 examples/ | 2026-04-30 |
 | D2 | custom preset 完整传还是 merge default | B — merge default | 2026-04-30 |
-| D3 | memoryMd null 的语义 | A — preset 决定不维护，消费方 guard | 2026-04-30 |
+| D3 | memoryMd null guard（联动 memoryMdRead） | A — host 传 `{ memoryMd: null }` 表示不维护；paths.js 联动设 memoryMdRead=null；消费方以 memoryMdRead === null 为 opt-out 信号 | 2026-04-30 |
 | D4 | preset/override 暴露在哪几个函数 | C — 全部函数都接受可选 paths | 2026-04-30 |
 | D5 | CLI flag 暴露在哪几个 CLI | C — 13 个 CLI 全加 | 2026-04-30 |
 | D6 | default preset 是否加 dry-run guard | B — 加，breaking change | 2026-04-30 |
@@ -631,6 +645,16 @@ C6 改造 maintain.js 时，validateMaintenance 在 isolated preset 下检查 re
 
 不修改 D1 决议本身，只更新实施细节。这是 D1 第二次实施修订，第一次是 working memory
 （commits 9e2d84a/92cc6f3/42651d0）。
+
+**D3 实施细节修订（2026-05-02，C6 探查中发现）：**
+原 D3 决议（commit d571c8b，C5 实施）使用 `paths.memoryMd === null` 作为消费方
+opt-out 信号。D1 第二次修订（commit d5b09c0）引入 `memoryMdRead` 字段后，
+validate-maintenance 改用 `paths.memoryMdRead` 实际读取——但 host 传
+`override: { memoryMd: null }` 时只设 `memoryMd`，`memoryMdRead` 不变，opt-out 信号失效。
+
+修订：`paths.js` 在 override merge 阶段加联动逻辑——`override.memoryMd` 显式为 `null` 时，
+`memoryMdRead` 也设为 `null`。消费方用 `paths.memoryMdRead === null` 作为 opt-out 信号。
+host API 不变（仍传 `{ memoryMd: null }`）。
 
 **C1 承诺修订记录（2026-05-02，C6 实施前发现）：**
 C1 (commit `6ebf02a`) commit message body 承诺："run-sample-pipeline.js
