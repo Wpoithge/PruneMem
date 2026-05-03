@@ -42,11 +42,12 @@ export async function runSamplePipeline({
   paths: paths_in,
 } = {}) {
   const paths = paths_in ?? getPaths({ workspace, preset, override });
-  const sampleDir = path.join(paths.pipelineRead, 'sample-run-01');
+  const readDir = path.join(paths.pipelineRead, 'sample-run-01');
+  const writeDir = path.join(paths.pipeline, 'sample-run-01');
   const steps = [];
-  steps.push(await runExtract({ paths, input: path.join(sampleDir, 'session-packet.json'), output: path.join(sampleDir, 'extracted.generated.json'), mock }));
-  steps.push(await runJudge({ paths, input: path.join(sampleDir, 'extracted.generated.json'), output: path.join(sampleDir, 'judged.generated.json'), mock }));
-  steps.push(await updateRegistries({ paths, judged: path.join(sampleDir, 'judged.generated.json'), sourcePaths: path.join(sampleDir, 'apply.json'), memoryId: 'mem-example-generated', channel: 'webchat', agent: 'demo', write }));
+  steps.push(await runExtract({ paths, input: path.join(readDir, 'session-packet.json'), output: path.join(writeDir, 'extracted.generated.json'), mock }));
+  steps.push(await runJudge({ paths, input: path.join(writeDir, 'extracted.generated.json'), output: path.join(writeDir, 'judged.generated.json'), mock }));
+  steps.push(await updateRegistries({ paths, judged: path.join(writeDir, 'judged.generated.json'), sourcePaths: path.join(readDir, 'apply.json'), memoryId: 'mem-example-generated', channel: 'webchat', agent: 'demo', write }));
   return { ok: true, mock, steps };
 }
 
