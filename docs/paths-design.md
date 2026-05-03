@@ -404,52 +404,79 @@ test('getPaths workspace defaults to process.cwd()', () => {
 
 ### 4.3 isolated preset 集成测试
 
-新增 `tests/regression/check-isolated-preset.sh`：
+新增 `tests/regression/check-isolated-preset.js`：
 
-```bash
-#!/bin/bash
-# 跑 sample pipeline，preset=isolated
-node src/core/run-sample-pipeline.js --workspace . --preset isolated --mock --write > /tmp/iso.json
+```js
+#!/usr/bin/env node
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 
-# 验证 examples/registry/ 没被污染
-DIRTY=$(git status --porcelain examples/registry/)
-if [ -n "$DIRTY" ]; then
-  echo "FAIL: isolated preset still polluted examples/registry/"
-  exit 1
-fi
+async function main() {
+  const checks = [];
 
-# 验证 .prunemem-isolated/ 被写了
-if [ ! -d .prunemem-isolated/registry ]; then
-  echo "FAIL: isolated preset didn't write to .prunemem-isolated/"
-  exit 1
-fi
+  // 跑 sample pipeline，preset=isolated
+  execSync('node src/core/run-sample-pipeline.js --workspace . --preset isolated --mock --write > /tmp/iso.json', { stdio: 'inherit' });
 
-# 清理
-rm -rf .prunemem-isolated/
+  // 1. 验证 examples/registry/ 没被污染
+  const registryDirty = execSync('git status --porcelain examples/registry/').toString().trim();
+  checks.push({ name: 'examples/registry/ not polluted', ok: registryDirty === '' });
 
-echo "[check-isolated-preset] OK"
+  // 2. 验证 examples/pipeline/ 没被污染
+  const pipelineDirty = execSync('git status --porcelain examples/pipeline/').toString().trim();
+  checks.push({ name: 'examples/pipeline/ not polluted', ok: pipelineDirty === '' });
+
+  // 3. 验证 .prunemem-isolated/ 真的被写了
+  checks.push({ name: '.prunemem-isolated/registry exists', ok: fs.existsSync('.prunemem-isolated/registry') });
+  checks.push({ name: '.prunemem-isolated/pipeline exists', ok: fs.existsSync('.prunemem-isolated/pipeline') });
+
+  // 清理
+  fs.rmSync('.prunemem-isolated', { recursive: true, force: true });
+
+  const ok = checks.every((c) => c.ok);
+  process.stdout.write(JSON.stringify({ ok, checks }, null, 2) + '\n');
+  process.exit(ok ? 0 : 1);
+}
+
+main().catch((err) => {
+  console.error('[check-isolated-preset] failed:', err);
+  process.exit(1);
+});
 ```
 
 加进 `scripts/run-checks.sh` 后变成 13/13。
 
 ### 4.4 default preset 不污染回归
 
-新增 `tests/regression/check-no-pollution.sh`：
+新增 `tests/regression/check-no-pollution.js`：
 
-```bash
-#!/bin/bash
-# 跑 default preset，不传 --write
-git status --porcelain examples/registry/ > /tmp/before.txt
-node src/core/run-sample-pipeline.js --workspace . --mock > /dev/null
-git status --porcelain examples/registry/ > /tmp/after.txt
+```js
+#!/usr/bin/env node
+import { execSync } from 'node:child_process';
 
-if ! diff -q /tmp/before.txt /tmp/after.txt > /dev/null; then
-  echo "FAIL: default preset (no --write) polluted examples/registry/"
-  diff /tmp/before.txt /tmp/after.txt
-  exit 1
-fi
+async function main() {
+  const checks = [];
 
-echo "[check-no-pollution] OK"
+  // 跑 default preset，不传 --write
+  const beforeRegistry = execSync('git status --porcelain examples/registry/').toString().trim();
+  const beforePipeline = execSync('git status --porcelain examples/pipeline/').toString().trim();
+
+  execSync('node src/core/run-sample-pipeline.js --workspace . --mock > /dev/null', { stdio: 'inherit' });
+
+  const afterRegistry = execSync('git status --porcelain examples/registry/').toString().trim();
+  const afterPipeline = execSync('git status --porcelain examples/pipeline/').toString().trim();
+
+  checks.push({ name: 'examples/registry/ not polluted', ok: beforeRegistry === afterRegistry });
+  checks.push({ name: 'examples/pipeline/ not polluted', ok: beforePipeline === afterPipeline });
+
+  const ok = checks.every((c) => c.ok);
+  process.stdout.write(JSON.stringify({ ok, checks }, null, 2) + '\n');
+  process.exit(ok ? 0 : 1);
+}
+
+main().catch((err) => {
+  console.error('[check-no-pollution] failed:', err);
+  process.exit(1);
+});
 ```
 
 加进 `scripts/run-checks.sh` 后变成 14/14。
