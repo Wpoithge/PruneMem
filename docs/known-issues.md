@@ -1,11 +1,11 @@
 # Known Issues
 
-This document captures known issues in PruneMem 0.3 host-agnostic refactor.
-Each entry includes diagnosis, current mitigation, and planned root-cause fix.
+This document captures known issues in PruneMem.
+Each entry includes diagnosis, current mitigation (if any), and resolution status.
 
 ## Issue #1: examples/registry/ contamination during direct execution
 
-**Status:** Mitigated. Root-cause fix planned for Step 4 (paths.js abstraction).
+**Status:** Closed in 0.4.0. Resolved by Step 4 (paths.js abstraction with D6 dry-run guard on update-registries).
 
 **Symptom:** Running `node src/core/run-sample-pipeline.js --workspace .` (or
 its underlying `update-registries.js`) modifies files under `examples/registry/`,
@@ -26,19 +26,18 @@ has a `write=false` default that prevents the same problem in that script.
 - Unit tests (`node --test tests/unit/...`): affected for tests that exercise
   the full pipeline against the demo workspace.
 
-**Mitigation (until Step 4):**
-- After running pipeline scripts directly, run `bash scripts/check-examples-clean.sh`
-  to detect contamination, then `git checkout -- examples/registry/` to restore.
-- Or: invoke pipeline scripts with `--workspace <tmpdir>` instead of `--workspace .`
-  to avoid touching the demo registry entirely.
+**Resolution (Step 4 complete):**
 
-**Planned root-cause fix (Step 4):**
-- Introduce `src/lib/paths.js` `getPaths(preset)` abstraction.
-- `default` preset continues to use `examples/registry/` for backward compatibility.
-- Tests can pass an `isolated` preset (or `--paths-preset isolated`) that points
-  writes at a tmpdir, eliminating contamination.
-- update-registries.js (and any other scripts hardcoding the path) will resolve
-  the registry path through `getPaths()` instead of `path.join`.
+- `src/lib/paths.js` introduces `getPaths(preset)` abstraction with three presets:
+  `default` (byte-compatible with old hardcoded paths), `isolated` (write paths
+  redirected to `.prunemem-isolated/`), `custom` (semantic alias for host adapters).
+- `update-registries.js` no longer writes by default — must explicitly pass `--write`
+  or `write: true`. This is a BREAKING CHANGE in 0.4.0.
+- Tests use `preset: 'isolated'` to avoid touching `examples/`.
+- See `docs/paths.md` for the host adapter integration guide.
+- `scripts/check-examples-clean.sh` is preserved as an additional manual defense
+  tool but is no longer required (paths.js abstraction prevents the contamination
+  at the source).
 
 **Diagnosed in:** Step 3 closeout, T5.
 

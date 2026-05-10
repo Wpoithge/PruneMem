@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.4.0] - 2026-05-10
+
+> **Note**: 0.3.0 was developed but never released as a versioned milestone.
+> It corresponds to Step 3 (lib+CLI dual-mode for all 13 core scripts).
+> See git tag `step3-done` for the codebase state at that point.
+
+### Added
+- `src/lib/paths.js` `getPaths()` abstraction for host-agnostic path resolution.
+  Three presets: `default` (byte-compatible), `isolated` (test isolation),
+  `custom` (host adapter alias). See docs/paths.md for the integration guide.
+- `src/lib/cli-args.js` `parsePresetArgs` helper for `--preset` / `--paths` CLI flags.
+- 14 core scripts now accept `preset`, `override`, and `paths` parameters,
+  enabling host adapters to redirect read/write paths without forking.
+- `tests/regression/check-isolated-preset.js`: verifies isolated preset works correctly.
+- `tests/regression/check-no-pollution.js`: verifies dry-run doesn't write.
+- `docs/paths.md`: host adapter integration guide.
+- `docs/paths-design.md`: Step 4 internal design spec with full revision history.
+
+### Changed
+- All 13 lib化 core scripts now resolve paths through `getPaths()` instead of
+  hardcoded `examples/` paths. Default preset preserves byte-level compatibility.
+- Working memory and MEMORY.md now have read/write path separation under
+  `isolated` preset (D1 design revision).
+
+### Breaking Changes
+- **`update-registries.js` no longer writes by default.** You must explicitly pass
+  `--write` (CLI) or `write: true` (function call) to enable writes. Without this,
+  the script computes the would-be inserts and returns the result without touching
+  disk. This prevents accidental contamination of demo workspace during local
+  development.
+
+  Migration:
+  - Before: `node src/core/update-registries.js --workspace ~/my-workspace`
+  - After:  `node src/core/update-registries.js --workspace ~/my-workspace --write`
+
+  `run-sample-pipeline.js` and `maintain.js` propagate `--write` to downstream
+  `updateRegistries` calls — no user action required for those entry points.
+
+### Fixed
+- Issue #1: examples/registry/ contamination during direct execution. Now resolved
+  at the root cause via paths.js abstraction. See docs/known-issues.md.
+
+### Notes
+- The previously released `scripts/check-examples-clean.sh` is preserved as an
+  additional manual defense tool but is no longer required.
+
 ## [0.2.0] - 2026-04-12
 
 ### Added
