@@ -4,59 +4,46 @@
 
 ## Status
 
-**Current step:** Step 3 completed ✓ — 2026-04-29
+**Current step:** Step 4 completed ✓ — 2026-05-10
 
-**Step 3 deliverables:**
+**Step 4 deliverables:**
 
-10 core scripts converted to lib+CLI dual-mode (Pattern A or B per file):
-check-provider-config, execution-plan, get-working-state, repair-source-paths,
-build-runtime-context, update-working-state, run-extract, run-judge,
-update-registries, validate-maintenance.
+- `src/lib/paths.js` — `getPaths()` abstraction with three presets (`default` /
+  `isolated` / `custom`). Three D1 implementation revisions during execution
+  (working memory, MEMORY.md, D3 coupling).
+- `src/lib/cli-args.js` — `parsePresetArgs` helper for `--preset` / `--paths` flags.
+- 13 lib化 core scripts refactored to use paths.js (Phase C, 6 main commits).
+- D6 dry-run guard on `update-registries.js` (BREAKING CHANGE).
+- 2 new regression checks: `tests/regression/check-isolated-preset.js`,
+  `check-no-pollution.js`. `run-checks.sh` now runs 14/14.
+- `docs/paths.md` — host adapter integration guide for Step 5+ host adapters.
+- `docs/paths-design.md` — Step 4 internal design spec with full revision history.
+- `docs/step4-followup.md` — F1-F5 deferred items.
 
-Step 2b (spawn → import migration) completed:
-- maintain.js: validate-maintenance + repair-source-paths now in-process
-- run-sample-pipeline.js: run-extract + run-judge + update-registries now in-process
-- runStep helpers removed from both files
-- Behavior change: --timeout-ms in maintain is deprecated (no-op + stderr warning)
+**Step 4 timeline:** 2026-04-29 to 2026-05-10. Approximately 33 commits across:
+- Phase A (audit): 5 commits
+- Phase B (lib): 4 commits
+- Phase C (refactor): 6 main commits + 11 spec/fix support commits
+- Phase D (regression + docs): 3 commits + 1 followup
+- Plus 3 ensureDir-related fixes during Phase C.
 
-Cross-cutting fixes:
-- 72f30a7: realpath-aware CLI entry detection (fileURLToPath alone fails on
-  macOS /tmp symlinks and spawn cross-path scenarios). Affects all 13 dual-mode
-  scripts via shared src/lib/cli-entry.js helper.
+**Known issues at end of Step 4:**
 
-Closeout tasks (T1–T5):
-- T1 ✅: run-sample-pipeline unit test added (commit 7bc152d). Closes Step 2a debt.
-- T2 ✅: covered by Step 2b commits (4b64db6, 4c86b3e).
-- T3 ✅: placeholder files curate.js + normalize-legacy-runs.js deleted (commit 045e0d4).
-- T4 ✅: this commit.
-- T5 ✅: Issue #1 diagnosed + mitigated (commit 8fed763). Root-cause fix deferred to Step 4.
+- Issue #1 (closed in 0.4.0): resolved by paths.js abstraction + D6 dry-run guard.
+  See `docs/known-issues.md` and `CHANGELOG.md` 0.4.0.
+- Issue #2 (closed in earlier step): mock baselines regenerated.
 
-**Known issues at end of Step 3:**
-
-- Issue #1 (mitigated, deferred to Step 4): examples/registry/ contamination
-  during direct local execution. Mitigation: scripts/check-examples-clean.sh +
-  manual git checkout. Full details in docs/known-issues.md.
-- Issue #2 (closed): Step 0 captured invalid golden baselines (PROVIDER_AUTH_MISSING)
-  for run-extract, run-judge, run-sample-pipeline. All three regenerated using
-  --mock mode in commits 4ec9b82 and a4b8b45.
-
-**Total Step 3 commits:** 30 (git log --oneline 80b263c..73533ee | wc -l)
-
-**Step 4 (paths.js abstraction) entry point:**
-
-Step 4 should start by reading docs/known-issues.md Issue #1 — the root-cause
-fix plan there (introduce getPaths(preset) abstraction, default preset preserves
-examples/registry/ for backward compatibility, isolated preset for tests) is
-the natural shape of Step 4. The sole hardcoded write path identified is
-src/core/update-registries.js:66; src/core/curator-apply.js already has
-write=false default protection so its hardcoded examples/registry/ at line 131
-is read-only and lower priority.
+**Step 5 (MCP server) entry point:** Step 5 will introduce a Model Context Protocol
+(MCP) server exposing PruneMem core functions as MCP tools. Host adapters in
+`src/hosts/` will follow Step 6.
 
 **⚠️ Step 1 commit 备注：** Commit e9d9178 实际包含项目 initial state (141 files) + archive-session refactor，因 git 历史空白导致打包过大。后续 commit 必须严格控制范围（每个 step 只改对应文件）。Commit 80b263c 和 27a5bc5 已恢复正常粒度。
 
 ### Known issues
 
-- **Issue #1: `examples/registry/` contamination during direct execution.** Diagnosed in T5 (Step 3 closeout) — root cause is `src/core/update-registries.js:66` hardcoding the registry write path with no dry-run guard. Mitigated by `scripts/check-examples-clean.sh` and `git checkout -- examples/registry/` workaround. Root-cause fix planned for Step 4 (paths.js abstraction). See `docs/known-issues.md` for full diagnosis.
+- **Issue #1: closed in 0.4.0.** See `docs/known-issues.md` for full Resolution
+  section. Resolved by paths.js abstraction + D6 dry-run guard on
+  `update-registries.js`.
 
 - **Issue #2: closed.** Step 0 captured PROVIDER_AUTH_MISSING as golden baseline for run-extract, run-judge, run-sample-pipeline. Regenerated using --mock mode in commits 4ec9b82 and a4b8b45. See docs/known-issues.md for full retrospective.
 
