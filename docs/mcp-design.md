@@ -364,6 +364,10 @@ Phase C ends when all tools in `mcp-tool-inventory.md` are implemented. The hand
 
 Phase D validates end-to-end behavior in Claude Desktop. If Step 6 introduces host adapters (`src/hosts/openclaw/`, `src/hosts/hermes/`), they may consume the same core functions directly (as libraries) or via MCP. The MCP server design is intentionally agnostic to host adapter internals.
 
+### Step 4 遗留项
+
+Step 4 follow-up 中的 F1–F5 项（见 `docs/step4-followup.md`）被有意推迟。如果其中任何一项影响 MCP 层行为——特别是 F2（ensureDir 契约）可能在 Phase B 写 server 文件时浮现——它将在 Phase C 收尾前处理，而非在 Phase B MVP 期间解决。
+
 ---
 
 ## 11. 风险 & 决议记录
