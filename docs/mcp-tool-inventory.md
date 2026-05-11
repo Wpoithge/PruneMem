@@ -25,10 +25,18 @@ This document catalogs every exported core function and its proposed MCP tool ma
 | `repairSourcePaths` | `prunemem_repair_source_paths` | write | 否 | — | `workspace`, `write`, `preset`, `override` | 是 | 从 registry 反推缺失的 pipeline artifact 并写 placeholder。`write` 默认 `false`。Phase C 第 2 批。 |
 | `runExtract` | `prunemem_run_extract` | write | 否（不暴露） | — | `workspace`, `input`, `output`, `mock`, `preset`, `override` | N/A | 不直接暴露为 MCP tool；通过 `prunemem_run_sample_pipeline` 间接调用。R1 决议见 `mcp-design.md` §11。 |
 | `runJudge` | `prunemem_run_judge` | write | 否（不暴露） | — | `workspace`, `input`, `output`, `mock`, `preset`, `override` | N/A | 不直接暴露为 MCP tool；通过 `prunemem_run_sample_pipeline` 间接调用。R1 决议见 `mcp-design.md` §11。 |
-| `runSamplePipeline` | `prunemem_run_sample_pipeline` | write | 否 | — | `workspace`, `mock`, `write`, `preset`, `override` | 是 | 组合工具：extract → judge → update-registries。`write` 默认 `false`，透传给 `updateRegistries`。`mock` 参数支持 deterministic test。Phase C 第 3 批。`write: false` 仅控制最终 `updateRegistries` 步骤；内部 `runExtract` / `runJudge` 仍会写中间 `.generated.json` 产物（这是底层 core 函数当前行为）。 |
+| `runSamplePipeline` | `prunemem_run_sample_pipeline` | write | 否 | — | `workspace`, `mock`, `write`, `preset`, `override` | 是 | Phase C 第 3 批，组合工具。写盘细节见下方说明。 |
 | `updateRegistries` | `prunemem_update_registries` | write | 否 | — | `workspace`, `judged`, `source_paths`, `memory_id`, `channel`, `agent`, `write`, `preset`, `override` | 是 | `write` 默认 `false`（0.4.0 breaking change）。向 registry jsonl 插入 judged items。Phase C 第 2 批。 |
 | `updateWorkingState` | `prunemem_update_working_state` | write | 否 | — | `workspace`, `input`, `state`, `write`, `preset`, `override` | 是 | `write` 默认 `false`。合并 delta 到 working state 并可选写盘。Phase C 第 2 批。 |
 | `validateMaintenance` | `prunemem_validate_maintenance` | read | 否 | — | `workspace`, `strict`, `preset`, `override` | 否 | 纯读。检查 registry 一致性、source_paths 可达性、MEMORY.md 重复 bullet。Phase C 第 1 批。 |
+
+---
+
+## ⚠️ prunemem_run_sample_pipeline 写盘行为说明
+
+`prunemem_run_sample_pipeline` 的 `write` 参数**仅控制最终 `updateRegistries` 步骤**是否向 registry jsonl 落盘。其内部调用的 `runExtract` 和 `runJudge` 步骤会**无条件写入 `.generated.json` 中间产物**（这是底层 core 函数的当前行为，不受 `write` 开关影响）。
+
+因此，调用方传入 `write: false` **不等于完全不动盘**。如需在调用 pipeline 时确保零副作用，应使用 `preset: 'isolated'` 将写路径重定向到隔离目录。
 
 ---
 
