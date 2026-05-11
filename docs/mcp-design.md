@@ -117,7 +117,7 @@ This document is the authoritative design spec for Step 5. Code implementation h
 
 **Phase C rolling mode (locked):**
 - Read-class tools first (`prunemem_validate_maintenance`, `prunemem_get_working_state`, `prunemem_execution_plan`), because they are side-effect-free and safer to test in live MCP clients.
-- Write-class tools second, ordered by blast radius: `prunemem_update_registries` (single registry) → `prunemem_curator_apply` (multi-registry) → `prunemem_repair_source_paths` → `prunemem_update_working_state` → composite tools (`prunemem_maintain`, `prunemem_run_sample_pipeline`) → `prunemem_run_extract` / `prunemem_run_judge` (LLM-dependent, mock mode required for deterministic tests).
+- Write-class tools second, ordered by blast radius: `prunemem_update_registries` (single registry) → `prunemem_curator_apply` (multi-registry) → `prunemem_repair_source_paths` → `prunemem_update_working_state` → composite tools (`prunemem_maintain`, `prunemem_run_sample_pipeline`).
 - Each tool addition is an atomic commit: one tool + its inspector verification.
 
 **Phase D regression形态 (locked):**
@@ -366,14 +366,14 @@ Phase D validates end-to-end behavior in Claude Desktop. If Step 6 introduces ho
 
 ### R1 — `runExtract` / `runJudge` unconditional write vs D5 dry-run default
 
-**Risk:** The underlying `runExtract` and `runJudge` core functions write output files unconditionally (no `write` parameter). If exposed as MCP tools, they violate the D5 dry-run default.
+**Resolved:** Option A. `runExtract` / `runJudge` are **not exposed as standalone MCP tools**. Agents that need extract/judge capabilities should call `prunemem_run_sample_pipeline` (which internally orchestrates the full extract → judge → update-registries flow).
 
-**Options (not decided in Phase A):**
+**Decision context (Options preserved for reference):**
 - A. Do not expose them as standalone MCP tools; only expose `runSamplePipeline` (which has `write: false` default and propagates to `updateRegistries`, though not to `runExtract`/`runJudge`).
 - B. Expose them but add an MCP-layer `write: false` mode that skips the call and returns a preview/dry-run stub.
 - C. Accept the inconsistency: these two tools always write, document it prominently, and rely on `isolated` preset for safety.
 
-**Recommendation:** Defer to Phase C. If a real use case requires standalone extract/judge via MCP, revisit. Until then, the `runSamplePipeline` tool covers the full pipeline.
+**Rationale:** Option A keeps the MCP surface minimal and avoids D5 violations. The underlying unconditional write behavior of `runExtract`/`runJudge` is an internal implementation detail of the composite pipeline, not a first-class MCP operation.
 
 ### R3 — MCP schema drift from core function signatures
 
