@@ -88,7 +88,7 @@ This document is the authoritative design spec for Step 5. Code implementation h
 ### D6 — MVP tools: `prunemem_archive_session` + `prunemem_runtime_context`
 
 **Decision:** Phase B implements only two tools:
-- `prunemem_archive_session` (write-class, archives a session into a structured packet)
+- `prunemem_archive_session` (read-class, computes a structured session archive without disk writes)
 - `prunemem_runtime_context` (read-class, retrieves the current runtime context bundle)
 
 **Reason:**
