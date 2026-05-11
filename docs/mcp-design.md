@@ -366,7 +366,7 @@ Phase D validates end-to-end behavior in Claude Desktop. If Step 6 introduces ho
 
 ---
 
-## 11. 风险 & 已知未决项
+## 11. 风险 & 决议记录
 
 ### R1 — `runExtract` / `runJudge` unconditional write vs D5 dry-run default
 
