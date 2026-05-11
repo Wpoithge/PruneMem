@@ -9,7 +9,7 @@
 
 ## 1. 背景 & 定位
 
-PruneMem Steps 0–4 completed the host-agnostic refactor: all 14 core scripts in `src/core/` are now importable as libraries, and `src/lib/paths.js` provides a unified path-resolution contract (`getPaths` with `default` / `isolated` / `custom` presets). Step 5 introduces an MCP server so that any MCP-capable host (Claude Desktop, Cline, etc.) can invoke PruneMem capabilities without spawning CLI processes.
+PruneMem Steps 0–4 completed the host-agnostic refactor: all 14 core scripts in `src/core/` are now importable as libraries, and `src/lib/paths.js` provides a unified path-resolution contract (`getPaths` with `default` / `isolated` / `custom` presets). Step 3 lib 化共覆盖 13 个消费 `paths.js` 的核心脚本；`checkProviderConfig` 是第 14 个已 lib 化但不消费 `paths` 的诊断 export，详见 `mcp-tool-inventory.md`. Step 5 introduces an MCP server so that any MCP-capable host (Claude Desktop, Cline, etc.) can invoke PruneMem capabilities without spawning CLI processes.
 
 This document is the authoritative design spec for Step 5. Code implementation happens in Phases B–D; Phase A (this document) locks all architectural decisions before coding begins.
 
@@ -142,8 +142,8 @@ This document is the authoritative design spec for Step 5. Code implementation h
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `workspace` | `string` | No | `process.cwd()` | Workspace root directory. |
-| `packet` | `string` | No | — | Absolute or relative path to `session-packet.json`. If omitted, uses `paths.pipelineRead/sample-run-01/session-packet.json`. |
-| `state` | `string` | No | — | Absolute or relative path to `working-state.json`. If omitted, uses `paths.workingMemoryRead/session-demo.working-state.json`. |
+| `packet` | `string` | No | — | Absolute or relative path to `session-packet.json`. If omitted, the underlying core function (`archiveSessionV41`) resolves a workspace-relative default. Refer to its implementation for the exact fallback. |
+| `state` | `string` | No | — | Absolute or relative path to `working-state.json`. If omitted, the underlying core function (`archiveSessionV41`) resolves a workspace-relative default. Refer to its implementation for the exact fallback. |
 | `memory_version` | `string` | No | `"v4.1"` | Memory schema version. |
 | `preset` | `string` | No | `"default"` | Path preset: `"default"`, `"isolated"`, or `"custom"`. |
 | `override` | `object` | No | `{}` | Partial path override object. Shallow-merged into preset base. |
@@ -177,8 +177,8 @@ This document is the authoritative design spec for Step 5. Code implementation h
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `workspace` | `string` | No | `process.cwd()` | Workspace root directory. |
-| `state` | `string` | No | — | Path to `working-state.json`. If omitted, uses `paths.workingMemoryRead/session-demo.working-state.json`. |
-| `plan` | `string` | No | — | Path to `execution-plan.json`. If omitted, uses `paths.workingMemoryRead/session-demo.execution-plan.json`. |
+| `state` | `string` | No | — | Path to `working-state.json`. If omitted, the underlying core function (`buildRuntimeContext`) resolves a workspace-relative default. Refer to its implementation for the exact fallback. |
+| `plan` | `string` | No | — | Path to `execution-plan.json`. If omitted, the underlying core function (`buildRuntimeContext`) resolves a workspace-relative default. Refer to its implementation for the exact fallback. |
 | `preset` | `string` | No | `"default"` | Path preset. |
 | `override` | `object` | No | `{}` | Partial path override. |
 
