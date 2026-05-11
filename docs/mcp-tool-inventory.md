@@ -15,7 +15,7 @@ This document catalogs every exported core function and its proposed MCP tool ma
 
 | lib 函数 | 拟 tool 名 | 类型 | MVP? | 必选参数 | 可选参数 | dry-run 适用 | 备注 |
 |---|---|---|---|---|---|---|---|
-| `archiveSessionV41` | `prunemem_archive_session` | write | **是** | — | `workspace`, `packet`, `state`, `memory_version`, `preset`, `override`, `paths` | 否 | 当前纯计算、不写盘；`write` 参数保留给未来扩展。详见 `mcp-design.md` §5.1 / R2。 |
+| `archiveSessionV41` | `prunemem_archive_session` | read | **是** | — | `workspace`, `packet`, `state`, `memory_version`, `preset`, `override` | 否 | 当前为 compute-only。如未来 core 加入 write 能力，按 R3 流程同步 schema。 |
 | `buildRuntimeContext` | `prunemem_runtime_context` | read | **是** | — | `workspace`, `state`, `plan`, `preset`, `override`, `paths` | 否 | 纯读。返回 `runtimeContext` + `executionContext` + `bundle`。 |
 | `checkProviderConfig` | `prunemem_check_provider_config` | read | 否 | — | `workspace` | 否 | 不涉及 `paths.js`，仅检查 `adapters/` provider 配置。对 MCP host 直接价值有限，暂不暴露；如 Step 6 有诊断需求再上线。 |
 | `curatorApply` | `prunemem_curator_apply` | write | 否 | — | `workspace`, `write`, `limit`, `preset`, `override`, `paths` | 是 | `write` 默认 `false`。治理多 active memory、合并 context note。Phase C 第 2 批。 |

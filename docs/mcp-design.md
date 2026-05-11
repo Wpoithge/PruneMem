@@ -163,8 +163,6 @@ This document is the authoritative design spec for Step 5. Code implementation h
 - JSON parse error → `{"ok": false, "error": "invalid JSON: <message>"}`.
 - Any unexpected throw → caught by MCP server wrapper, serialized to JSON error object.
 
-**Dry-run note:** This tool is classified as "write-class" in D6 because "archive" implies a state-changing operation, but the underlying `archiveSessionV41` function is currently compute-only (it returns the archive object without persisting it). Therefore the `write` parameter has no effect today. If a future revision persists archives to disk, the `write` parameter defined in §7 will govern that behavior without breaking the tool schema.
-
 ---
 
 ### 5.2 `prunemem_runtime_context`
@@ -275,7 +273,7 @@ Write-class tools MUST include `write: boolean` in their return object so the ca
 
 | Tool | dry-run applicable? | Notes |
 |---|---|---|
-| `prunemem_archive_session` | No (currently) | Underlying function is compute-only. See §5.1. |
+| `prunemem_archive_session` | No (read-class — underlying function is compute-only) | — |
 | `prunemem_runtime_context` | No | Read-only. |
 | `prunemem_validate_maintenance` | No | Read-only. |
 | `prunemem_get_working_state` | No | Read-only. |
@@ -382,12 +380,6 @@ Phase D validates end-to-end behavior in Claude Desktop. If Step 6 introduces ho
 - C. Accept the inconsistency: these two tools always write, document it prominently, and rely on `isolated` preset for safety.
 
 **Recommendation:** Defer to Phase C. If a real use case requires standalone extract/judge via MCP, revisit. Until then, the `runSamplePipeline` tool covers the full pipeline.
-
-### R2 — `archiveSessionV41` is compute-only but classified as write-class
-
-**Risk:** D6 labels `prunemem_archive_session` as write-class, but the core function does not write. Future core revisions might add persistence, at which point the `write` parameter becomes load-bearing. If we add `write` to the schema now, it is a no-op; if we omit it, future changes are breaking.
-
-**Mitigation:** Include `write` in the schema (default `false`) with documented no-op semantics for the current core version. This is forward-compatible.
 
 ### R3 — MCP schema drift from core function signatures
 
