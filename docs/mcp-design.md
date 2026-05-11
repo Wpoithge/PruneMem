@@ -379,19 +379,19 @@ Phase D validates end-to-end behavior in Claude Desktop. If Step 6 introduces ho
 
 **Rationale:** Option A keeps the MCP surface minimal and avoids D5 violations. The underlying unconditional write behavior of `runExtract`/`runJudge` is an internal implementation detail of the composite pipeline, not a first-class MCP operation.
 
-### R3 — MCP schema drift from core function signatures
+### R2 — MCP schema drift from core function signatures
 
 **Risk:** As core functions evolve (new parameters, renamed fields), the MCP tool schema may drift.
 
 **Mitigation:** Keep the MCP layer thin (§9). When core changes, the MCP schema change should be a 1:1 reflection. Add a checklist item to future core PR templates: "If you changed a core function export signature, update the corresponding MCP tool schema in `src/mcp/tools.js`."
 
-### R4 — No deterministic test for LLM-dependent tools
+### R3 — No deterministic test for LLM-dependent tools
 
 **Risk:** `runExtract`, `runJudge`, and by extension `runSamplePipeline` require LLM calls. MCP inspector tests would be non-deterministic and require API keys.
 
 **Mitigation:** Core already supports `--mock` mode (see `known-issues.md` Issue #2). MCP tools for these functions must expose a `mock: boolean` parameter that is passed through to core. Inspector tests use `mock: true`.
 
-### R5 — `@modelcontextprotocol/sdk` version pinning
+### R4 — `@modelcontextprotocol/sdk` version pinning
 
 **Risk:** The SDK is under active development. A future minor version may introduce breaking changes.
 
