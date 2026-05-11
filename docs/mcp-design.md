@@ -279,8 +279,8 @@ Write-class tools MUST include `write: boolean` in their return object so the ca
 | `prunemem_update_working_state` | Yes | Default `write: false`. |
 | `prunemem_maintain` | Yes | Default `write: false`; propagates to downstream. |
 | `prunemem_run_sample_pipeline` | Yes | Default `write: false`; propagates to `updateRegistries`. |
-| `prunemem_run_extract` | **TBD** | Underlying `runExtract` writes unconditionally. See §11 Risk R1. |
-| `prunemem_run_judge` | **TBD** | Underlying `runJudge` writes unconditionally. See §11 Risk R1. |
+| `prunemem_run_extract` | N/A | Not exposed as standalone MCP tool. R1 resolution: Option A. |
+| `prunemem_run_judge` | N/A | Not exposed as standalone MCP tool. R1 resolution: Option A. |
 
 ### Error on write failure
 
@@ -316,6 +316,10 @@ Tool-level errors use a simple object shape; no numeric error codes:
 ```
 
 If the core function returns a richer error structure (e.g., `validateMaintenance` returns `notes` array), the tool forwards it verbatim inside the `content` text.
+
+### Structured non-throw errors from core
+
+Some core functions return `{ ok: false, notes: [...] }` or similar structured failure objects without throwing (e.g., `validateMaintenance`, `curatorApply`). These are forwarded as normal tool results (`isError: false`), with the full object placed in `content.text`. `isError: true` is reserved for cases where the MCP layer itself cannot proceed: schema validation failure, uncaught throw from the core function, or transport-level failure.
 
 ---
 

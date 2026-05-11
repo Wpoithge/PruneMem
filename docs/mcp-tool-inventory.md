@@ -51,10 +51,7 @@ Tools are rolled out in four batches, matching the risk surface:
    - `prunemem_maintain`
    - `prunemem_run_sample_pipeline`
 
-4. **Batch 4 — LLM-dependent tools** (require `mock: true` for deterministic testing, unconditional write):
-   - `prunemem_run_extract`
-   - `prunemem_run_judge`
-   - Decision on R1 (unconditional write vs D5) must be made before this batch starts.
+4. **Batch 4 — 已取消。** `prunemem_run_extract` / `prunemem_run_judge` 不直接暴露为 MCP tool（R1 决议选 A）。LLM-dependent 的完整 pipeline 通过 `prunemem_run_sample_pipeline` 提供。
 
 **Deferred beyond Phase C:**
 - `prunemem_check_provider_config` — Not exposed unless Step 6 host adapter needs runtime provider validation.
@@ -63,9 +60,8 @@ Tools are rolled out in four batches, matching the risk surface:
 
 ## 显式不暴露
 
-All 14 exported core functions are accounted for in the inventory table above. There are **no pure internal helpers** in `src/core/` that lack an export and would be candidates for MCP exposure. The `src/core/` directory contains exclusively CLI entry points that have been lib-ized; any true internal helpers (e.g., `readJson`, `writeJsonl`, `groupBy`) are file-local functions, not exports, and therefore correctly excluded from the inventory.
+以下 export 有意不暴露为 MCP tool：
 
-The only function that is intentionally **not exposed as an MCP tool** within Step 5 is `checkProviderConfig`. It is listed in the inventory table (rather than here) because it is a genuine export, but its exposure is deferred to Step 6+ with the following rationale:
-- It does not consume `paths.js` and is therefore outside the host-agnostic path contract.
-- Its purpose is internal provider diagnostics; an MCP host typically does not need to inspect PruneMem's model provider configuration.
-- If a future host adapter requires provider health checks, it can be enabled with zero schema changes.
+- `checkProviderConfig` — 不消费 `paths.js`，对 MCP host 直接价值有限，Step 6 之前不暴露。
+- `runExtract` — R1 决议（选 A），通过 `runSamplePipeline` 间接使用。
+- `runJudge` — 同上。
