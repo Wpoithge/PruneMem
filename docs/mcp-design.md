@@ -147,7 +147,6 @@ This document is the authoritative design spec for Step 5. Code implementation h
 | `memory_version` | `string` | No | `"v4.1"` | Memory schema version. |
 | `preset` | `string` | No | `"default"` | Path preset: `"default"`, `"isolated"`, or `"custom"`. |
 | `override` | `object` | No | `{}` | Partial path override object. Shallow-merged into preset base. |
-| `paths` | `object` | No | — | Pre-resolved paths object. If provided, `workspace`/`preset`/`override` are ignored. |
 
 **Output schema (tool result `content` array, text item):**
 
@@ -182,7 +181,6 @@ This document is the authoritative design spec for Step 5. Code implementation h
 | `plan` | `string` | No | — | Path to `execution-plan.json`. If omitted, uses `paths.workingMemoryRead/session-demo.execution-plan.json`. |
 | `preset` | `string` | No | `"default"` | Path preset. |
 | `override` | `object` | No | `{}` | Partial path override. |
-| `paths` | `object` | No | — | Pre-resolved paths object. If provided, other path params ignored. |
 
 **Output schema:**
 
@@ -209,10 +207,10 @@ The MCP layer is a **thin proxy**. It does not:
 
 It does:
 1. **Schema validation** — ensure types match (string vs boolean vs object). Reject with a clear MCP error if a required field is missing or a type is wrong.
-2. **Passthrough** — forward `workspace`, `preset`, `override`, and `paths` exactly as received.
+2. **Passthrough** — forward `workspace`, `preset`, and `override` exactly as received.
 3. **Serialization** — await the core function, JSON-stringify the result, and place it in the MCP `content` array.
 
-**Priority rule (same as core):** If the MCP client sends `paths`, the tool handler passes `paths` and **omits** `workspace`/`preset`/`override` from the core function call. This mirrors the D4 rule in `paths-design.md` §3.3: "`paths` parameter优先."
+> **MCP tools 不接受预解析的 `paths` 参数。** 需要绕过 preset 机制的宿主应直接以 lib 形式调用 core 函数，不经过 MCP 层。
 
 **Example handler skeleton:**
 
@@ -225,13 +223,9 @@ export const archiveSessionTool = {
   inputSchema: { /* see §5.1 */ },
   async handler(args) {
     const params = {};
-    if (args.paths) {
-      params.paths = args.paths;
-    } else {
-      if (args.workspace !== undefined) params.workspace = args.workspace;
-      if (args.preset !== undefined) params.preset = args.preset;
-      if (args.override !== undefined) params.override = args.override;
-    }
+    if (args.workspace !== undefined) params.workspace = args.workspace;
+    if (args.preset !== undefined) params.preset = args.preset;
+    if (args.override !== undefined) params.override = args.override;
     if (args.packet !== undefined) params.packet = args.packet;
     if (args.state !== undefined) params.state = args.state;
     if (args.memory_version !== undefined) params.memoryVersion = args.memory_version;
