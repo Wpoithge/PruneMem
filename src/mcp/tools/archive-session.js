@@ -42,49 +42,27 @@ export const inputSchema = {
   additionalProperties: false,
 };
 
+const ARG_MAP = {
+  workspace: 'workspace',
+  packet: 'packet',
+  state: 'state',
+  memory_version: 'memoryVersion',
+  preset: 'preset',
+  override: 'override',
+};
+
 /**
  * @param {Record<string, unknown>} args
  */
 export async function handler(args) {
-  try {
-    const params = {};
-    if (args.workspace !== undefined) {
-      if (typeof args.workspace !== 'string') {
-        throw new TypeError('workspace must be a string');
-      }
-      params.workspace = args.workspace;
+  const params = {};
+  for (const [mcpKey, libKey] of Object.entries(ARG_MAP)) {
+    if (args[mcpKey] !== undefined) {
+      params[libKey] = args[mcpKey];
     }
-    if (args.packet !== undefined) {
-      if (typeof args.packet !== 'string') {
-        throw new TypeError('packet must be a string');
-      }
-      params.packet = args.packet;
-    }
-    if (args.state !== undefined) {
-      if (typeof args.state !== 'string') {
-        throw new TypeError('state must be a string');
-      }
-      params.state = args.state;
-    }
-    if (args.memory_version !== undefined) {
-      if (typeof args.memory_version !== 'string') {
-        throw new TypeError('memory_version must be a string');
-      }
-      params.memoryVersion = args.memory_version;
-    }
-    if (args.preset !== undefined) {
-      if (typeof args.preset !== 'string') {
-        throw new TypeError('preset must be a string');
-      }
-      params.preset = args.preset;
-    }
-    if (args.override !== undefined) {
-      if (typeof args.override !== 'object' || args.override === null) {
-        throw new TypeError('override must be an object');
-      }
-      params.override = args.override;
-    }
+  }
 
+  try {
     const result = await archiveSessionV41(params);
     return wrapStructuredResult(result);
   } catch (err) {
