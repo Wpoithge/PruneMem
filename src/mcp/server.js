@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import * as archiveSession from './tools/archive-session.js';
+import { validateArgs } from './shared/validate.js';
 
 const TOOLS = [archiveSession];
 
@@ -44,14 +45,7 @@ export function createServer() {
       throw new McpError(ErrorCode.InvalidParams, 'Missing arguments');
     }
 
-    // Reject pre-resolved paths (M2 resolution)
-    if ('paths' in args) {
-      throw new McpError(
-        ErrorCode.InvalidParams,
-        'MCP tools do not accept a pre-resolved "paths" parameter. ' +
-          'Use "workspace", "preset", and "override" instead.'
-      );
-    }
+    validateArgs(args, tool.inputSchema, tool.name);
 
     return await tool.handler(args);
   });
