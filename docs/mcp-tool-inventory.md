@@ -19,7 +19,7 @@ This document catalogs every exported core function and its proposed MCP tool ma
 | `buildRuntimeContext` | `prunemem_runtime_context` | read | **是** | — | `workspace`, `state`, `plan`, `preset`, `override` | 否 | 纯读。返回 `runtimeContext` + `executionContext` + `bundle`。 |
 | `checkProviderConfig` | `prunemem_check_provider_config` | read | 否 | — | `workspace` | 否 | 不涉及 `paths.js`，仅检查 `adapters/` provider 配置。对 MCP host 直接价值有限，暂不暴露；如 Step 6 有诊断需求再上线。 |
 | `curatorApply` | `prunemem_curator_apply` | write | 否 | — | `workspace`, `write`, `limit`, `preset`, `override` | 是 | `write` 默认 `false`。治理多 active memory、合并 context note。Phase C 第 2 批。 |
-| `executionPlan` | `prunemem_execution_plan` | read | 否 | — | `workspace`, `input` | 否 | 纯读。从 execution-plan input 生成 plan + milestoneState + executionContext。Phase C 第 1 批。 |
+| `executionPlan` | `prunemem_execution_plan` | read | 否 | — | `workspace`, `input` | 否 | 纯读。从 execution-plan input 生成 plan + milestoneState + executionContext。Phase C 第 1 批。唯一一个不接受 preset/override 的 core 函数；MCP schema 应仅声明 workspace 和 input 两个字段，不要照抄其他 tool 的 preset/override 模板。 |
 | `getWorkingState` | `prunemem_get_working_state` | read | 否 | — | `workspace`, `input`, `preset`, `override` | 否 | 纯读。返回 parsed working state JSON。Phase C 第 1 批。 |
 | `maintain` | `prunemem_maintain` | write | 否 | — | `workspace`, `write`, `strict`, `repair_source_paths`, `timeout_ms`, `preset`, `override` | 是 | 组合工具：validate → curator-apply → [repair] → validate。`timeout_ms` 已废弃但保留兼容。Phase C 第 3 批。 |
 | `repairSourcePaths` | `prunemem_repair_source_paths` | write | 否 | — | `workspace`, `write`, `preset`, `override` | 是 | 从 registry 反推缺失的 pipeline artifact 并写 placeholder。`write` 默认 `false`。Phase C 第 2 批。 |
