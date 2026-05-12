@@ -41,7 +41,7 @@ This spawns the server as a subprocess, performs an initialize handshake, lists 
 | Tool | Status | Core function |
 |---|---|---|
 | `prunemem_archive_session` | ✅ Phase B-1 | `src/core/archive-session-v41.js` |
-| `prunemem_runtime_context` | 🕐 Phase B-2 | `src/core/build-runtime-context.js` |
+| `prunemem_runtime_context` | ✅ Phase B-2 | `src/core/build-runtime-context.js` |
 
 ## Implementation notes for client authors
 
