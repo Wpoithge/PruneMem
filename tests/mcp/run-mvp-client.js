@@ -220,8 +220,11 @@ async function run() {
     assert(toolNames2.includes('prunemem_get_working_state'), 'tools/list must include prunemem_get_working_state');
     assert(toolNames2.includes('prunemem_validate_maintenance'), 'tools/list must include prunemem_validate_maintenance');
     assert(toolNames2.includes('prunemem_repair_source_paths'), 'tools/list must include prunemem_repair_source_paths');
-    assert(toolNames2.length === 6, 'tools/list must return exactly 6 tools (no leakage)');
-    console.log('PASS: tools/list returns exactly 6 tools');
+    assert(toolNames2.includes('prunemem_update_working_state'), 'tools/list must include prunemem_update_working_state');
+    assert(toolNames2.includes('prunemem_curator_apply'), 'tools/list must include prunemem_curator_apply');
+    assert(toolNames2.includes('prunemem_update_registries'), 'tools/list must include prunemem_update_registries');
+    assert(toolNames2.length === 9, 'tools/list must return exactly 9 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 9 tools');
 
     // 7. tools/call — runtime_context happy path (isolated preset)
     const rtId = ++idCounter;
@@ -670,6 +673,239 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call repair_source_paths rejects paths argument (M2)');
+
+    // 25. tools/call — update_working_state happy path (isolated preset, write: false)
+    const uwsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: uwsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_working_state',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: false,
+        },
+      },
+    });
+
+    const uwsRes = await waitForMessage(messages, (m) => m.id === uwsId);
+    assert(uwsRes.result !== undefined, 'update_working_state happy path must return a result');
+    const uwsContent = uwsRes.result.content;
+    assert(Array.isArray(uwsContent), 'update_working_state happy path result must have content array');
+    assert(uwsContent.length > 0, 'update_working_state happy path content must not be empty');
+    assert(uwsContent[0].type === 'text', 'update_working_state happy path content must be text');
+    const uwsParsed = JSON.parse(uwsContent[0].text);
+    assert(uwsParsed.ok === true, 'update_working_state happy path parsed result must have ok: true');
+    assert(uwsParsed.state !== undefined, 'update_working_state happy path parsed result must have state');
+    console.log('PASS: tools/call update_working_state happy path (write: false)');
+
+    // 26. tools/call — update_working_state schema error (write as string "yes")
+    const uwsErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: uwsErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_working_state',
+        arguments: {
+          write: 'yes',
+        },
+      },
+    });
+
+    const uwsErrRes = await waitForMessage(messages, (m) => m.id === uwsErrId);
+    assert(uwsErrRes.error !== undefined, 'update_working_state schema validation failure must produce protocol-level error');
+    assert(uwsErrRes.result === undefined, 'update_working_state schema validation failure must not return a tool result');
+    assert(
+      typeof uwsErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /write|boolean/i.test(uwsErrRes.error.message),
+      'error message should mention write and/or boolean'
+    );
+    console.log('PASS: tools/call update_working_state error path (write string → protocol error)');
+
+    // 27. tools/call — update_working_state M2 enforcement: paths argument must be rejected
+    const uwsPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: uwsPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_working_state',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const uwsPathsRes = await waitForMessage(messages, (m) => m.id === uwsPathsId);
+    assert(uwsPathsRes.error !== undefined, 'update_working_state paths argument must produce a protocol-level error');
+    assert(uwsPathsRes.result === undefined, 'update_working_state paths rejection must not return a tool result');
+    assert(
+      typeof uwsPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(uwsPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call update_working_state rejects paths argument (M2)');
+
+    // 28. tools/call — curator_apply happy path (isolated preset, write: false)
+    const caId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: caId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_curator_apply',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: false,
+        },
+      },
+    });
+
+    const caRes = await waitForMessage(messages, (m) => m.id === caId);
+    assert(caRes.result !== undefined, 'curator_apply happy path must return a result');
+    const caContent = caRes.result.content;
+    assert(Array.isArray(caContent), 'curator_apply happy path result must have content array');
+    assert(caContent.length > 0, 'curator_apply happy path content must not be empty');
+    assert(caContent[0].type === 'text', 'curator_apply happy path content must be text');
+    const caParsed = JSON.parse(caContent[0].text);
+    assert(caParsed.ok === true, 'curator_apply happy path parsed result must have ok: true');
+    assert(caParsed.write === false, 'curator_apply happy path parsed result must have write: false');
+    assert(caParsed.summary !== undefined, 'curator_apply happy path parsed result must have summary');
+    console.log('PASS: tools/call curator_apply happy path (write: false)');
+
+    // 29. tools/call — curator_apply schema error (write as string "yes")
+    const caErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: caErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_curator_apply',
+        arguments: {
+          write: 'yes',
+        },
+      },
+    });
+
+    const caErrRes = await waitForMessage(messages, (m) => m.id === caErrId);
+    assert(caErrRes.error !== undefined, 'curator_apply schema validation failure must produce protocol-level error');
+    assert(caErrRes.result === undefined, 'curator_apply schema validation failure must not return a tool result');
+    assert(
+      typeof caErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /write|boolean/i.test(caErrRes.error.message),
+      'error message should mention write and/or boolean'
+    );
+    console.log('PASS: tools/call curator_apply error path (write string → protocol error)');
+
+    // 30. tools/call — curator_apply M2 enforcement: paths argument must be rejected
+    const caPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: caPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_curator_apply',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const caPathsRes = await waitForMessage(messages, (m) => m.id === caPathsId);
+    assert(caPathsRes.error !== undefined, 'curator_apply paths argument must produce a protocol-level error');
+    assert(caPathsRes.result === undefined, 'curator_apply paths rejection must not return a tool result');
+    assert(
+      typeof caPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(caPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call curator_apply rejects paths argument (M2)');
+
+    // 31. tools/call — update_registries happy path (isolated preset, write: false)
+    const urId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: urId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_registries',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: false,
+        },
+      },
+    });
+
+    const urRes = await waitForMessage(messages, (m) => m.id === urId);
+    assert(urRes.result !== undefined, 'update_registries happy path must return a result');
+    const urContent = urRes.result.content;
+    assert(Array.isArray(urContent), 'update_registries happy path result must have content array');
+    assert(urContent.length > 0, 'update_registries happy path content must not be empty');
+    assert(urContent[0].type === 'text', 'update_registries happy path content must be text');
+    const urParsed = JSON.parse(urContent[0].text);
+    assert(urParsed.ok === true, 'update_registries happy path parsed result must have ok: true');
+    assert(urParsed.write === false, 'update_registries happy path parsed result must have write: false');
+    assert(urParsed.files !== undefined, 'update_registries happy path parsed result must have files');
+    console.log('PASS: tools/call update_registries happy path (write: false)');
+
+    // 32. tools/call — update_registries schema error (write as string "yes")
+    const urErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: urErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_registries',
+        arguments: {
+          write: 'yes',
+        },
+      },
+    });
+
+    const urErrRes = await waitForMessage(messages, (m) => m.id === urErrId);
+    assert(urErrRes.error !== undefined, 'update_registries schema validation failure must produce protocol-level error');
+    assert(urErrRes.result === undefined, 'update_registries schema validation failure must not return a tool result');
+    assert(
+      typeof urErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /write|boolean/i.test(urErrRes.error.message),
+      'error message should mention write and/or boolean'
+    );
+    console.log('PASS: tools/call update_registries error path (write string → protocol error)');
+
+    // 33. tools/call — update_registries M2 enforcement: paths argument must be rejected
+    const urPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: urPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_update_registries',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const urPathsRes = await waitForMessage(messages, (m) => m.id === urPathsId);
+    assert(urPathsRes.error !== undefined, 'update_registries paths argument must produce a protocol-level error');
+    assert(urPathsRes.result === undefined, 'update_registries paths rejection must not return a tool result');
+    assert(
+      typeof urPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(urPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call update_registries rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
