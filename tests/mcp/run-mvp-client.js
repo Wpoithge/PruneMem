@@ -218,8 +218,9 @@ async function run() {
     assert(toolNames2.includes('prunemem_runtime_context'), 'tools/list must include prunemem_runtime_context');
     assert(toolNames2.includes('prunemem_execution_plan'), 'tools/list must include prunemem_execution_plan');
     assert(toolNames2.includes('prunemem_get_working_state'), 'tools/list must include prunemem_get_working_state');
-    assert(toolNames2.length === 4, 'tools/list must return exactly 4 tools (no leakage)');
-    console.log('PASS: tools/list returns exactly 4 tools');
+    assert(toolNames2.includes('prunemem_validate_maintenance'), 'tools/list must include prunemem_validate_maintenance');
+    assert(toolNames2.length === 5, 'tools/list must return exactly 5 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 5 tools');
 
     // 7. tools/call — runtime_context happy path (isolated preset)
     const rtId = ++idCounter;
@@ -434,6 +435,109 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call get_working_state rejects paths argument (M2)');
+
+    // 16. tools/call — validate_maintenance happy path (isolated preset, strict: false)
+    const vmId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: vmId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_validate_maintenance',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          strict: false,
+        },
+      },
+    });
+
+    const vmRes = await waitForMessage(messages, (m) => m.id === vmId);
+    assert(vmRes.result !== undefined, 'validate_maintenance happy path (strict:false) must return a result');
+    const vmContent = vmRes.result.content;
+    assert(Array.isArray(vmContent), 'validate_maintenance happy path result must have content array');
+    assert(vmContent.length > 0, 'validate_maintenance happy path content must not be empty');
+    assert(vmContent[0].type === 'text', 'validate_maintenance happy path content must be text');
+    const vmParsed = JSON.parse(vmContent[0].text);
+    assert(vmParsed.ok === true, 'validate_maintenance happy path parsed result must have ok: true');
+    assert(vmParsed.counts !== undefined, 'validate_maintenance happy path parsed result must have counts');
+    console.log('PASS: tools/call validate_maintenance happy path (strict: false)');
+
+    // 17. tools/call — validate_maintenance happy path (strict: true)
+    const vmTrueId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: vmTrueId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_validate_maintenance',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          strict: true,
+        },
+      },
+    });
+
+    const vmTrueRes = await waitForMessage(messages, (m) => m.id === vmTrueId);
+    assert(vmTrueRes.result !== undefined, 'validate_maintenance happy path (strict:true) must return a result');
+    const vmTrueContent = vmTrueRes.result.content;
+    assert(Array.isArray(vmTrueContent), 'validate_maintenance happy path (strict:true) result must have content array');
+    assert(vmTrueContent.length > 0, 'validate_maintenance happy path (strict:true) content must not be empty');
+    assert(vmTrueContent[0].type === 'text', 'validate_maintenance happy path (strict:true) content must be text');
+    const vmTrueParsed = JSON.parse(vmTrueContent[0].text);
+    assert(vmTrueParsed.ok === true, 'validate_maintenance happy path (strict:true) parsed result must have ok: true');
+    console.log('PASS: tools/call validate_maintenance happy path (strict: true)');
+
+    // 18. tools/call — validate_maintenance schema error (strict as string "yes")
+    const vmErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: vmErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_validate_maintenance',
+        arguments: {
+          strict: 'yes',
+        },
+      },
+    });
+
+    const vmErrRes = await waitForMessage(messages, (m) => m.id === vmErrId);
+    assert(vmErrRes.error !== undefined, 'validate_maintenance schema validation failure must produce protocol-level error');
+    assert(vmErrRes.result === undefined, 'validate_maintenance schema validation failure must not return a tool result');
+    assert(
+      typeof vmErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /strict|boolean/i.test(vmErrRes.error.message),
+      'error message should mention strict and/or boolean'
+    );
+    console.log('PASS: tools/call validate_maintenance error path (strict string → protocol error)');
+
+    // 19. tools/call — validate_maintenance M2 enforcement: paths argument must be rejected
+    const vmPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: vmPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_validate_maintenance',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const vmPathsRes = await waitForMessage(messages, (m) => m.id === vmPathsId);
+    assert(vmPathsRes.error !== undefined, 'validate_maintenance paths argument must produce a protocol-level error');
+    assert(vmPathsRes.result === undefined, 'validate_maintenance paths rejection must not return a tool result');
+    assert(
+      typeof vmPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(vmPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call validate_maintenance rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
