@@ -60,6 +60,26 @@ function assert(condition, message) {
   }
 }
 
+async function gracefulExit(proc) {
+  proc.stdin.end();
+  const EXIT_TIMEOUT_MS = 2000;
+  await new Promise((resolve) => {
+    let resolved = false;
+    const done = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve();
+    };
+    proc.once('exit', done);
+    setTimeout(() => {
+      if (!resolved) {
+        proc.kill();
+        done();
+      }
+    }, EXIT_TIMEOUT_MS);
+  });
+}
+
 async function run() {
   const proc = spawn(process.execPath, [SERVER_PATH], {
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -159,8 +179,7 @@ async function run() {
     assert(errParsed.ok === false, 'error path parsed result must have ok: false');
     console.log('PASS: tools/call error path (invalid schema)');
   } finally {
-    proc.stdin.end();
-    proc.kill();
+    await gracefulExit(proc);
   }
 
   if (failed) {
