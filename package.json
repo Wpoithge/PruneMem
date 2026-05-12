@@ -5,11 +5,19 @@
   "description": "A layered, lifecycle-aware memory plugin for OpenClaw-style agents.",
   "type": "module",
   "license": "MIT",
+  "bin": {
+    "prunemem-mcp": "src/mcp/bin.js"
+  },
   "scripts": {
     "check": "node scripts/run-checks.sh",
-    "demo": "bash scripts/demo.sh"
+    "demo": "bash scripts/demo.sh",
+    "mcp": "node src/mcp/bin.js",
+    "test:mcp": "node tests/mcp/run-mvp-client.js"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.28.0"
   }
 }
