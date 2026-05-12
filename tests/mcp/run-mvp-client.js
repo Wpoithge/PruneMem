@@ -25,7 +25,7 @@ function readMessages(stdout) {
       try {
         messages.push(JSON.parse(line));
       } catch {
-        // ignore parse errors in test harness
+        console.warn(`[test-harness] skipped non-JSON line: ${line.slice(0, 200)}`);
       }
     }
   });
