@@ -201,6 +201,95 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call rejects paths argument (M2)');
+
+    // 6. tools/list — must return exactly 2 tools (no leakage)
+    const list2Id = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: list2Id,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const list2Res = await waitForMessage(messages, (m) => m.id === list2Id);
+    assert(Array.isArray(list2Res.result?.tools), 'tools/list must return tools array');
+    const toolNames2 = list2Res.result.tools.map((t) => t.name);
+    assert(toolNames2.includes('prunemem_archive_session'), 'tools/list must include prunemem_archive_session');
+    assert(toolNames2.includes('prunemem_runtime_context'), 'tools/list must include prunemem_runtime_context');
+    assert(toolNames2.length === 2, 'tools/list must return exactly 2 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 2 tools');
+
+    // 7. tools/call — runtime_context happy path (isolated preset)
+    const rtId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rtId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_runtime_context',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+        },
+      },
+    });
+
+    const rtRes = await waitForMessage(messages, (m) => m.id === rtId);
+    assert(rtRes.result !== undefined, 'runtime_context happy path must return a result');
+    const rtContent = rtRes.result.content;
+    assert(Array.isArray(rtContent), 'runtime_context happy path result must have content array');
+    assert(rtContent.length > 0, 'runtime_context happy path content must not be empty');
+    assert(rtContent[0].type === 'text', 'runtime_context happy path content must be text');
+    const rtParsed = JSON.parse(rtContent[0].text);
+    assert(rtParsed.ok === true, 'runtime_context happy path parsed result must have ok: true');
+    assert(rtParsed.runtimeContext !== undefined, 'runtime_context happy path parsed result must have runtimeContext');
+    console.log('PASS: tools/call runtime_context happy path (isolated preset)');
+
+    // 8. tools/call — runtime_context schema error (state as number)
+    const rtErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rtErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_runtime_context',
+        arguments: {
+          state: 42,
+        },
+      },
+    });
+
+    const rtErrRes = await waitForMessage(messages, (m) => m.id === rtErrId);
+    assert(rtErrRes.error !== undefined, 'runtime_context schema validation failure must produce protocol-level error');
+    assert(rtErrRes.result === undefined, 'runtime_context schema validation failure must not return a tool result');
+    assert(
+      typeof rtErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    console.log('PASS: tools/call runtime_context error path (schema validation → protocol error)');
+
+    // 9. tools/call — runtime_context M2 enforcement: paths argument must be rejected
+    const rtPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rtPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_runtime_context',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const rtPathsRes = await waitForMessage(messages, (m) => m.id === rtPathsId);
+    assert(rtPathsRes.error !== undefined, 'runtime_context paths argument must produce a protocol-level error');
+    assert(rtPathsRes.result === undefined, 'runtime_context paths rejection must not return a tool result');
+    assert(
+      typeof rtPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(rtPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call runtime_context rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
