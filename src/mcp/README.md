@@ -62,6 +62,22 @@ consult this section before writing transport code.
 - **SDK version**: pinned to `@modelcontextprotocol/sdk@1.28.0`. If upgrading,
   re-verify the framing and error semantics above.
 
+## Schema invariants
+
+The following invariants are enforced by the MCP layer and must NOT be relaxed
+without revisiting the relevant design decisions.
+
+- **`additionalProperties: false` on every tool `inputSchema`.** This is the
+  physical enforcement of decision M2 in `docs/mcp-design.md`: MCP tools must
+  not accept a pre-resolved `paths` parameter, because the underlying lib
+  functions (`archiveSessionV41`, `buildRuntimeContext`, …) DO accept `paths`
+  as an escape hatch. Allowing `additionalProperties: true` (or removing the
+  guard) would silently re-expose `paths` to MCP clients and break M2. If a
+  future tool genuinely needs to relax this, re-read M2 first and document the
+  exception in `docs/mcp-design.md` before changing the schema.
+- **`paths` field must never appear in any tool's `properties`.** Same reason
+  as above — declaring it would defeat `additionalProperties: false`.
+
 ## Design reference
 
 - `docs/mcp-design.md` — authoritative spec (transport, naming, parameter passthrough, error handling)
