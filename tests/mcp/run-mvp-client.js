@@ -219,8 +219,9 @@ async function run() {
     assert(toolNames2.includes('prunemem_execution_plan'), 'tools/list must include prunemem_execution_plan');
     assert(toolNames2.includes('prunemem_get_working_state'), 'tools/list must include prunemem_get_working_state');
     assert(toolNames2.includes('prunemem_validate_maintenance'), 'tools/list must include prunemem_validate_maintenance');
-    assert(toolNames2.length === 5, 'tools/list must return exactly 5 tools (no leakage)');
-    console.log('PASS: tools/list returns exactly 5 tools');
+    assert(toolNames2.includes('prunemem_repair_source_paths'), 'tools/list must include prunemem_repair_source_paths');
+    assert(toolNames2.length === 6, 'tools/list must return exactly 6 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 6 tools');
 
     // 7. tools/call — runtime_context happy path (isolated preset)
     const rtId = ++idCounter;
@@ -538,6 +539,137 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call validate_maintenance rejects paths argument (M2)');
+
+    // 20. tools/call — repair_source_paths happy path (isolated preset, no write → default dry-run)
+    const rspId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_repair_source_paths',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+        },
+      },
+    });
+
+    const rspRes = await waitForMessage(messages, (m) => m.id === rspId);
+    assert(rspRes.result !== undefined, 'repair_source_paths happy path (default dry-run) must return a result');
+    const rspContent = rspRes.result.content;
+    assert(Array.isArray(rspContent), 'repair_source_paths happy path result must have content array');
+    assert(rspContent.length > 0, 'repair_source_paths happy path content must not be empty');
+    assert(rspContent[0].type === 'text', 'repair_source_paths happy path content must be text');
+    const rspParsed = JSON.parse(rspContent[0].text);
+    assert(rspParsed.ok === true, 'repair_source_paths happy path parsed result must have ok: true');
+    assert(rspParsed.write === false, 'repair_source_paths default dry-run must return write: false');
+    assert(rspParsed.repaired !== undefined, 'repair_source_paths happy path parsed result must have repaired');
+    console.log('PASS: tools/call repair_source_paths happy path (default dry-run)');
+
+    // 21. tools/call — repair_source_paths happy path (explicit write: false)
+    const rspFalseId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspFalseId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_repair_source_paths',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: false,
+        },
+      },
+    });
+
+    const rspFalseRes = await waitForMessage(messages, (m) => m.id === rspFalseId);
+    assert(rspFalseRes.result !== undefined, 'repair_source_paths happy path (write:false) must return a result');
+    const rspFalseContent = rspFalseRes.result.content;
+    assert(Array.isArray(rspFalseContent), 'repair_source_paths happy path (write:false) result must have content array');
+    assert(rspFalseContent.length > 0, 'repair_source_paths happy path (write:false) content must not be empty');
+    assert(rspFalseContent[0].type === 'text', 'repair_source_paths happy path (write:false) content must be text');
+    const rspFalseParsed = JSON.parse(rspFalseContent[0].text);
+    assert(rspFalseParsed.ok === true, 'repair_source_paths happy path (write:false) parsed result must have ok: true');
+    assert(rspFalseParsed.write === false, 'repair_source_paths write:false must return write: false');
+    console.log('PASS: tools/call repair_source_paths happy path (write: false)');
+
+    // 22. tools/call — repair_source_paths happy path (explicit write: true)
+    const rspTrueId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspTrueId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_repair_source_paths',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: true,
+        },
+      },
+    });
+
+    const rspTrueRes = await waitForMessage(messages, (m) => m.id === rspTrueId);
+    assert(rspTrueRes.result !== undefined, 'repair_source_paths happy path (write:true) must return a result');
+    const rspTrueContent = rspTrueRes.result.content;
+    assert(Array.isArray(rspTrueContent), 'repair_source_paths happy path (write:true) result must have content array');
+    assert(rspTrueContent.length > 0, 'repair_source_paths happy path (write:true) content must not be empty');
+    assert(rspTrueContent[0].type === 'text', 'repair_source_paths happy path (write:true) content must be text');
+    const rspTrueParsed = JSON.parse(rspTrueContent[0].text);
+    assert(rspTrueParsed.ok === true, 'repair_source_paths happy path (write:true) parsed result must have ok: true');
+    assert(rspTrueParsed.write === true, 'repair_source_paths write:true must return write: true');
+    console.log('PASS: tools/call repair_source_paths happy path (write: true)');
+
+    // 23. tools/call — repair_source_paths schema error (write as string "yes")
+    const rspErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_repair_source_paths',
+        arguments: {
+          write: 'yes',
+        },
+      },
+    });
+
+    const rspErrRes = await waitForMessage(messages, (m) => m.id === rspErrId);
+    assert(rspErrRes.error !== undefined, 'repair_source_paths schema validation failure must produce protocol-level error');
+    assert(rspErrRes.result === undefined, 'repair_source_paths schema validation failure must not return a tool result');
+    assert(
+      typeof rspErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /write|boolean/i.test(rspErrRes.error.message),
+      'error message should mention write and/or boolean'
+    );
+    console.log('PASS: tools/call repair_source_paths error path (write string → protocol error)');
+
+    // 24. tools/call — repair_source_paths M2 enforcement: paths argument must be rejected
+    const rspPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_repair_source_paths',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const rspPathsRes = await waitForMessage(messages, (m) => m.id === rspPathsId);
+    assert(rspPathsRes.error !== undefined, 'repair_source_paths paths argument must produce a protocol-level error');
+    assert(rspPathsRes.result === undefined, 'repair_source_paths paths rejection must not return a tool result');
+    assert(
+      typeof rspPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(rspPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call repair_source_paths rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
