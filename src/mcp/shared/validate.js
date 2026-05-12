@@ -1,6 +1,6 @@
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
-const SUPPORTED_TYPES = ['string', 'object'];
+const SUPPORTED_TYPES = ['string', 'object', 'boolean'];
 
 function assertSupportedType(type, toolName, field) {
   if (!SUPPORTED_TYPES.includes(type)) {
@@ -24,6 +24,12 @@ function checkType(value, expectedType, toolName, field) {
         `Tool "${toolName}" field "${field}": expected object, got ${value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value}`
       );
     }
+  }
+  if (expectedType === 'boolean' && typeof value !== 'boolean') {
+    throw new McpError(
+      ErrorCode.InvalidParams,
+      `Tool "${toolName}" field "${field}": expected boolean, got ${value === null ? 'null' : typeof value}`
+    );
   }
 }
 
