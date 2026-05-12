@@ -8,9 +8,10 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import * as archiveSession from './tools/archive-session.js';
+import * as runtimeContext from './tools/runtime-context.js';
 import { validateArgs } from './shared/validate.js';
 
-const TOOLS = [archiveSession];
+const TOOLS = [archiveSession, runtimeContext];
 
 export function createServer() {
   const server = new Server(
