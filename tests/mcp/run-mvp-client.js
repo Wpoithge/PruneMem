@@ -216,8 +216,10 @@ async function run() {
     const toolNames2 = list2Res.result.tools.map((t) => t.name);
     assert(toolNames2.includes('prunemem_archive_session'), 'tools/list must include prunemem_archive_session');
     assert(toolNames2.includes('prunemem_runtime_context'), 'tools/list must include prunemem_runtime_context');
-    assert(toolNames2.length === 2, 'tools/list must return exactly 2 tools (no leakage)');
-    console.log('PASS: tools/list returns exactly 2 tools');
+    assert(toolNames2.includes('prunemem_execution_plan'), 'tools/list must include prunemem_execution_plan');
+    assert(toolNames2.includes('prunemem_get_working_state'), 'tools/list must include prunemem_get_working_state');
+    assert(toolNames2.length === 4, 'tools/list must return exactly 4 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 4 tools');
 
     // 7. tools/call — runtime_context happy path (isolated preset)
     const rtId = ++idCounter;
@@ -290,6 +292,148 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call runtime_context rejects paths argument (M2)');
+
+    // 10. tools/call — execution_plan happy path
+    const epId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: epId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_execution_plan',
+        arguments: {
+          workspace: process.cwd(),
+        },
+      },
+    });
+
+    const epRes = await waitForMessage(messages, (m) => m.id === epId);
+    assert(epRes.result !== undefined, 'execution_plan happy path must return a result');
+    const epContent = epRes.result.content;
+    assert(Array.isArray(epContent), 'execution_plan happy path result must have content array');
+    assert(epContent.length > 0, 'execution_plan happy path content must not be empty');
+    assert(epContent[0].type === 'text', 'execution_plan happy path content must be text');
+    const epParsed = JSON.parse(epContent[0].text);
+    assert(epParsed.ok === true, 'execution_plan happy path parsed result must have ok: true');
+    assert(epParsed.plan !== undefined, 'execution_plan happy path parsed result must have plan');
+    console.log('PASS: tools/call execution_plan happy path');
+
+    // 11. tools/call — execution_plan schema error (input as number)
+    const epErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: epErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_execution_plan',
+        arguments: {
+          input: 42,
+        },
+      },
+    });
+
+    const epErrRes = await waitForMessage(messages, (m) => m.id === epErrId);
+    assert(epErrRes.error !== undefined, 'execution_plan schema validation failure must produce protocol-level error');
+    assert(epErrRes.result === undefined, 'execution_plan schema validation failure must not return a tool result');
+    assert(
+      typeof epErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    console.log('PASS: tools/call execution_plan error path (schema validation → protocol error)');
+
+    // 12. tools/call — execution_plan M2 enforcement: paths argument must be rejected
+    const epPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: epPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_execution_plan',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const epPathsRes = await waitForMessage(messages, (m) => m.id === epPathsId);
+    assert(epPathsRes.error !== undefined, 'execution_plan paths argument must produce a protocol-level error');
+    assert(epPathsRes.result === undefined, 'execution_plan paths rejection must not return a tool result');
+    assert(
+      typeof epPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(epPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call execution_plan rejects paths argument (M2)');
+
+    // 13. tools/call — get_working_state happy path (isolated preset)
+    const wsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: wsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_get_working_state',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+        },
+      },
+    });
+
+    const wsRes = await waitForMessage(messages, (m) => m.id === wsId);
+    assert(wsRes.result !== undefined, 'get_working_state happy path must return a result');
+    const wsContent = wsRes.result.content;
+    assert(Array.isArray(wsContent), 'get_working_state happy path result must have content array');
+    assert(wsContent.length > 0, 'get_working_state happy path content must not be empty');
+    assert(wsContent[0].type === 'text', 'get_working_state happy path content must be text');
+    const wsParsed = JSON.parse(wsContent[0].text);
+    assert(wsParsed.schema_version !== undefined, 'get_working_state happy path parsed result must have schema_version');
+    console.log('PASS: tools/call get_working_state happy path (isolated preset)');
+
+    // 14. tools/call — get_working_state schema error (input as number)
+    const wsErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: wsErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_get_working_state',
+        arguments: {
+          input: 42,
+        },
+      },
+    });
+
+    const wsErrRes = await waitForMessage(messages, (m) => m.id === wsErrId);
+    assert(wsErrRes.error !== undefined, 'get_working_state schema validation failure must produce protocol-level error');
+    assert(wsErrRes.result === undefined, 'get_working_state schema validation failure must not return a tool result');
+    assert(
+      typeof wsErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    console.log('PASS: tools/call get_working_state error path (schema validation → protocol error)');
+
+    // 15. tools/call — get_working_state M2 enforcement: paths argument must be rejected
+    const wsPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: wsPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_get_working_state',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const wsPathsRes = await waitForMessage(messages, (m) => m.id === wsPathsId);
+    assert(wsPathsRes.error !== undefined, 'get_working_state paths argument must produce a protocol-level error');
+    assert(wsPathsRes.result === undefined, 'get_working_state paths rejection must not return a tool result');
+    assert(
+      typeof wsPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(wsPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call get_working_state rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }

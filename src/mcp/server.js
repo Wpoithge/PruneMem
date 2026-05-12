@@ -9,9 +9,11 @@ import {
 
 import * as archiveSession from './tools/archive-session.js';
 import * as runtimeContext from './tools/runtime-context.js';
+import * as executionPlan from './tools/execution-plan.js';
+import * as getWorkingState from './tools/get-working-state.js';
 import { validateArgs } from './shared/validate.js';
 
-const TOOLS = [archiveSession, runtimeContext];
+const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState];
 
 export function createServer() {
   const server = new Server(
