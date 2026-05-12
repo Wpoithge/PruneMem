@@ -169,15 +169,38 @@ async function run() {
     });
 
     const errRes = await waitForMessage(messages, (m) => m.id === errId);
-    // Schema validation failure in handler throws TypeError which is caught by wrapThrownError
-    // → result should have isError: true
-    assert(errRes.result !== undefined, 'error path call must return a result');
-    assert(errRes.result.isError === true, 'error path result must have isError: true');
-    const errContent = errRes.result.content;
-    assert(Array.isArray(errContent), 'error path result must have content array');
-    const errParsed = JSON.parse(errContent[0].text);
-    assert(errParsed.ok === false, 'error path parsed result must have ok: false');
-    console.log('PASS: tools/call error path (invalid schema)');
+    // P2: schema validation failure → JSON-RPC error response, NOT isError tool result
+    assert(errRes.error !== undefined, 'schema validation failure must produce protocol-level error');
+    assert(errRes.result === undefined, 'schema validation failure must not return a tool result');
+    assert(
+      typeof errRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    console.log('PASS: tools/call error path (schema validation → protocol error)');
+
+    // 6. tools/call — M2 enforcement: paths argument must be rejected
+    const pathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: pathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_archive_session',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const pathsRes = await waitForMessage(messages, (m) => m.id === pathsId);
+    // paths is rejected by validateArgs (additionalProperties: false) → protocol-level error
+    assert(pathsRes.error !== undefined, 'paths argument must produce a protocol-level error');
+    assert(pathsRes.result === undefined, 'paths rejection must not return a tool result');
+    assert(
+      typeof pathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(pathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
