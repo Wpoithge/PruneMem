@@ -12,9 +12,10 @@ import * as runtimeContext from './tools/runtime-context.js';
 import * as executionPlan from './tools/execution-plan.js';
 import * as getWorkingState from './tools/get-working-state.js';
 import * as validateMaintenance from './tools/validate-maintenance.js';
+import * as repairSourcePaths from './tools/repair-source-paths.js';
 import { validateArgs } from './shared/validate.js';
 
-const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance];
+const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance, repairSourcePaths];
 
 export function createServer() {
   const server = new Server(
