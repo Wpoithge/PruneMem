@@ -43,6 +43,25 @@ This spawns the server as a subprocess, performs an initialize handshake, lists 
 | `prunemem_archive_session` | ✅ Phase B-1 | `src/core/archive-session-v41.js` |
 | `prunemem_runtime_context` | 🕐 Phase B-2 | `src/core/build-runtime-context.js` |
 
+## Implementation notes for client authors
+
+These are gotchas discovered while implementing the Phase B-1 test client. Future
+clients (Phase B-2 tests, Phase D regression, external integrations) should
+consult this section before writing transport code.
+
+- **Message framing**: `StdioServerTransport` (SDK 1.28.0) delimits JSON-RPC
+  messages with a single `\n` (newline). It does **not** use `Content-Length`
+  headers. Each message is `JSON.stringify(payload) + '\n'`.
+- **Initialization sequence**: client must send `initialize` request, wait for
+  the response, then send the `notifications/initialized` notification before
+  any `tools/*` call.
+- **Error response shape**: schema validation failures and other protocol-level
+  errors are returned as JSON-RPC `error` objects (`response.error`), not as
+  tool results with `isError: true`. Tool-level `isError: true` is reserved for
+  runtime failures inside the tool handler (e.g. core function throws).
+- **SDK version**: pinned to `@modelcontextprotocol/sdk@1.28.0`. If upgrading,
+  re-verify the framing and error semantics above.
+
 ## Design reference
 
 - `docs/mcp-design.md` — authoritative spec (transport, naming, parameter passthrough, error handling)
