@@ -1097,6 +1097,112 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call run_sample_pipeline rejects paths argument (M2)');
+
+    // === Cross-tool consistency regression tests (Phase D) ===
+
+    // 41. Use case C — D3 naming prefix invariant (all 11 tools)
+    assert(
+      toolNames2.every((n) => n.startsWith('prunemem_')),
+      'all tools must start with "prunemem_" prefix (D3 invariant)'
+    );
+    console.log('PASS: all 11 tools use prunemem_ naming prefix (D3 systemic invariant)');
+
+    // 42. Use case D — M2 additionalProperties: false invariant (via tools/list)
+    const allSchemaInvariantValid = list2Res.result.tools.every((t) => {
+      return t.inputSchema && t.inputSchema.additionalProperties === false;
+    });
+    assert(allSchemaInvariantValid, 'every tool inputSchema must have additionalProperties: false (M2 physical enforcement)');
+    console.log('PASS: all 11 tools enforce additionalProperties: false via inputSchema (M2 systemic invariant)');
+
+    // 43. Use case A — all 11 tools reject paths argument consistently (M2 systemic invariant)
+    const allTools = [
+      'prunemem_archive_session',
+      'prunemem_runtime_context',
+      'prunemem_execution_plan',
+      'prunemem_get_working_state',
+      'prunemem_validate_maintenance',
+      'prunemem_repair_source_paths',
+      'prunemem_update_working_state',
+      'prunemem_curator_apply',
+      'prunemem_update_registries',
+      'prunemem_maintain',
+      'prunemem_run_sample_pipeline',
+    ];
+
+    for (const toolName of allTools) {
+      const id = ++idCounter;
+      sendMessage(proc.stdin, {
+        jsonrpc: '2.0',
+        id,
+        method: 'tools/call',
+        params: {
+          name: toolName,
+          arguments: { paths: { workingMemoryRead: '/tmp/whatever' } },
+        },
+      });
+      const res = await waitForMessage(messages, (m) => m.id === id);
+      assert(res.error !== undefined, `${toolName} must reject paths argument with protocol error`);
+      assert(
+        typeof res.error.message === 'string' && /paths|additional|unexpected/i.test(res.error.message),
+        `${toolName} error message should mention paths/additional/unexpected`
+      );
+    }
+    console.log('PASS: all 11 tools reject paths argument consistently (M2 systemic invariant)');
+
+    // 44. Use case B — all 6 write-class tools default to dry-run consistently (D5 systemic invariant)
+    const writeTools = [
+      'prunemem_repair_source_paths',
+      'prunemem_update_working_state',
+      'prunemem_curator_apply',
+      'prunemem_update_registries',
+      'prunemem_maintain',
+      'prunemem_run_sample_pipeline',
+    ];
+
+    for (const toolName of writeTools) {
+      // Call 1: omit write (should default to dry-run)
+      const id1 = ++idCounter;
+      const args1 = { workspace: process.cwd(), preset: 'isolated' };
+      if (toolName === 'prunemem_run_sample_pipeline') {
+        args1.mock = true;
+      }
+      sendMessage(proc.stdin, {
+        jsonrpc: '2.0',
+        id: id1,
+        method: 'tools/call',
+        params: { name: toolName, arguments: args1 },
+      });
+      const res1 = await waitForMessage(messages, (m) => m.id === id1);
+      assert(res1.result !== undefined, `${toolName} (no write) must return a result`);
+      assert(res1.error === undefined, `${toolName} (no write) must not return protocol error`);
+      const parsed1 = JSON.parse(res1.result.content[0].text);
+      assert(parsed1.ok === true, `${toolName} (no write) parsed result must have ok: true`);
+      if (parsed1.write !== undefined) {
+        assert(parsed1.write === false, `${toolName} (no write) must default to dry-run (write: false)`);
+      }
+
+      // Call 2: explicit write: false (should match default behavior)
+      const id2 = ++idCounter;
+      const args2 = { workspace: process.cwd(), preset: 'isolated', write: false };
+      if (toolName === 'prunemem_run_sample_pipeline') {
+        args2.mock = true;
+      }
+      sendMessage(proc.stdin, {
+        jsonrpc: '2.0',
+        id: id2,
+        method: 'tools/call',
+        params: { name: toolName, arguments: args2 },
+      });
+      const res2 = await waitForMessage(messages, (m) => m.id === id2);
+      assert(res2.result !== undefined, `${toolName} (write:false) must return a result`);
+      assert(res2.error === undefined, `${toolName} (write:false) must not return protocol error`);
+      const parsed2 = JSON.parse(res2.result.content[0].text);
+      assert(parsed2.ok === true, `${toolName} (write:false) parsed result must have ok: true`);
+      if (parsed2.write !== undefined) {
+        assert(parsed2.write === false, `${toolName} (write:false) must return write: false`);
+      }
+    }
+    console.log('PASS: all 6 write-class tools default to dry-run consistently (D5 systemic invariant)');
   } finally {
     await gracefulExit(proc);
   }
