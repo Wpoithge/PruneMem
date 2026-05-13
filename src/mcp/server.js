@@ -16,9 +16,11 @@ import * as repairSourcePaths from './tools/repair-source-paths.js';
 import * as updateWorkingState from './tools/update-working-state.js';
 import * as curatorApply from './tools/curator-apply.js';
 import * as updateRegistries from './tools/update-registries.js';
+import * as maintain from './tools/maintain.js';
+import * as runSamplePipeline from './tools/run-sample-pipeline.js';
 import { validateArgs } from './shared/validate.js';
 
-const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance, repairSourcePaths, updateWorkingState, curatorApply, updateRegistries];
+const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance, repairSourcePaths, updateWorkingState, curatorApply, updateRegistries, maintain, runSamplePipeline];
 
 export function createServer() {
   const server = new Server(

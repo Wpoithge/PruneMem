@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs/promises';
 
 const SERVER_PATH = fileURLToPath(new URL('../../src/mcp/bin.js', import.meta.url));
 
@@ -223,8 +224,10 @@ async function run() {
     assert(toolNames2.includes('prunemem_update_working_state'), 'tools/list must include prunemem_update_working_state');
     assert(toolNames2.includes('prunemem_curator_apply'), 'tools/list must include prunemem_curator_apply');
     assert(toolNames2.includes('prunemem_update_registries'), 'tools/list must include prunemem_update_registries');
-    assert(toolNames2.length === 9, 'tools/list must return exactly 9 tools (no leakage)');
-    console.log('PASS: tools/list returns exactly 9 tools');
+    assert(toolNames2.includes('prunemem_maintain'), 'tools/list must include prunemem_maintain');
+    assert(toolNames2.includes('prunemem_run_sample_pipeline'), 'tools/list must include prunemem_run_sample_pipeline');
+    assert(toolNames2.length === 11, 'tools/list must return exactly 11 tools (no leakage)');
+    console.log('PASS: tools/list returns exactly 11 tools');
 
     // 7. tools/call — runtime_context happy path (isolated preset)
     const rtId = ++idCounter;
@@ -906,6 +909,194 @@ async function run() {
       'error message should mention the offending field'
     );
     console.log('PASS: tools/call update_registries rejects paths argument (M2)');
+
+    // 34. tools/call — maintain happy path (isolated preset, write: false)
+    const mId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: mId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_maintain',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          write: false,
+        },
+      },
+    });
+
+    const mRes = await waitForMessage(messages, (m) => m.id === mId);
+    assert(mRes.result !== undefined, 'maintain happy path must return a result');
+    const mContent = mRes.result.content;
+    assert(Array.isArray(mContent), 'maintain happy path result must have content array');
+    assert(mContent.length > 0, 'maintain happy path content must not be empty');
+    assert(mContent[0].type === 'text', 'maintain happy path content must be text');
+    const mParsed = JSON.parse(mContent[0].text);
+    assert(mParsed.ok === true, 'maintain happy path parsed result must have ok: true');
+    assert(mParsed.summary !== undefined, 'maintain happy path parsed result must have summary');
+    console.log('PASS: tools/call maintain happy path (write: false)');
+
+    // 35. tools/call — maintain schema error (write as string "yes")
+    const mErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: mErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_maintain',
+        arguments: {
+          write: 'yes',
+        },
+      },
+    });
+
+    const mErrRes = await waitForMessage(messages, (m) => m.id === mErrId);
+    assert(mErrRes.error !== undefined, 'maintain schema validation failure must produce protocol-level error');
+    assert(mErrRes.result === undefined, 'maintain schema validation failure must not return a tool result');
+    assert(
+      typeof mErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /write|boolean/i.test(mErrRes.error.message),
+      'error message should mention write and/or boolean'
+    );
+    console.log('PASS: tools/call maintain error path (write string → protocol error)');
+
+    // 36. tools/call — maintain M2 enforcement: paths argument must be rejected
+    const mPathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: mPathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_maintain',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const mPathsRes = await waitForMessage(messages, (m) => m.id === mPathsId);
+    assert(mPathsRes.error !== undefined, 'maintain paths argument must produce a protocol-level error');
+    assert(mPathsRes.result === undefined, 'maintain paths rejection must not return a tool result');
+    assert(
+      typeof mPathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(mPathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call maintain rejects paths argument (M2)');
+
+    // --- F3 cleanup helper ---
+    async function cleanupGeneratedFiles() {
+      const generatedDir = '.prunemem-isolated/pipeline/sample-run-01';
+      try {
+        const files = await fs.readdir(generatedDir);
+        for (const f of files) {
+          if (f.endsWith('.generated.json')) {
+            await fs.unlink(path.join(generatedDir, f));
+          }
+        }
+      } catch (e) {
+        // directory may not exist; ignore
+      }
+    }
+
+    // 37. tools/call — run_sample_pipeline happy path (isolated preset, mock: true, write: false)
+    await cleanupGeneratedFiles();
+    const rspId2 = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rspId2,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_run_sample_pipeline',
+        arguments: {
+          workspace: process.cwd(),
+          preset: 'isolated',
+          mock: true,
+          write: false,
+        },
+      },
+    });
+
+    const rsp2Res = await waitForMessage(messages, (m) => m.id === rspId2);
+    assert(rsp2Res.result !== undefined, 'run_sample_pipeline happy path must return a result');
+    const rsp2Content = rsp2Res.result.content;
+    assert(Array.isArray(rsp2Content), 'run_sample_pipeline happy path result must have content array');
+    assert(rsp2Content.length > 0, 'run_sample_pipeline happy path content must not be empty');
+    assert(rsp2Content[0].type === 'text', 'run_sample_pipeline happy path content must be text');
+    const rsp2Parsed = JSON.parse(rsp2Content[0].text);
+    assert(rsp2Parsed.ok === true, 'run_sample_pipeline happy path parsed result must have ok: true');
+    assert(rsp2Parsed.mock === true, 'run_sample_pipeline happy path parsed result must have mock: true');
+    console.log('PASS: tools/call run_sample_pipeline happy path (mock: true, write: false)');
+
+    // 38. tools/call — run_sample_pipeline F3 physical evidence test
+    const generatedDir = '.prunemem-isolated/pipeline/sample-run-01';
+    let f3EvidenceCount = 0;
+    try {
+      const files = await fs.readdir(generatedDir);
+      for (const f of files) {
+        if (f.endsWith('.generated.json')) {
+          f3EvidenceCount++;
+        }
+      }
+    } catch (e) {
+      // directory may not exist
+    }
+    assert(f3EvidenceCount >= 2, 'F3 evidence: extract/judge must write at least 2 .generated.json files even with write: false');
+    console.log('PASS: tools/call run_sample_pipeline writes intermediate .generated.json (F3 evidence)');
+    await cleanupGeneratedFiles();
+
+    // 39. tools/call — run_sample_pipeline schema error (mock as string "yes")
+    const rsp2ErrId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rsp2ErrId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_run_sample_pipeline',
+        arguments: {
+          mock: 'yes',
+        },
+      },
+    });
+
+    const rsp2ErrRes = await waitForMessage(messages, (m) => m.id === rsp2ErrId);
+    assert(rsp2ErrRes.error !== undefined, 'run_sample_pipeline schema validation failure must produce protocol-level error');
+    assert(rsp2ErrRes.result === undefined, 'run_sample_pipeline schema validation failure must not return a tool result');
+    assert(
+      typeof rsp2ErrRes.error.message === 'string',
+      'protocol error must have a message'
+    );
+    assert(
+      /mock|boolean/i.test(rsp2ErrRes.error.message),
+      'error message should mention mock and/or boolean'
+    );
+    console.log('PASS: tools/call run_sample_pipeline error path (mock string → protocol error)');
+
+    // 40. tools/call — run_sample_pipeline M2 enforcement: paths argument must be rejected
+    const rsp2PathsId = ++idCounter;
+    sendMessage(proc.stdin, {
+      jsonrpc: '2.0',
+      id: rsp2PathsId,
+      method: 'tools/call',
+      params: {
+        name: 'prunemem_run_sample_pipeline',
+        arguments: {
+          paths: { workingMemoryRead: '/tmp/whatever' },
+        },
+      },
+    });
+
+    const rsp2PathsRes = await waitForMessage(messages, (m) => m.id === rsp2PathsId);
+    assert(rsp2PathsRes.error !== undefined, 'run_sample_pipeline paths argument must produce a protocol-level error');
+    assert(rsp2PathsRes.result === undefined, 'run_sample_pipeline paths rejection must not return a tool result');
+    assert(
+      typeof rsp2PathsRes.error.message === 'string' && /paths|additional|unexpected/i.test(rsp2PathsRes.error.message),
+      'error message should mention the offending field'
+    );
+    console.log('PASS: tools/call run_sample_pipeline rejects paths argument (M2)');
   } finally {
     await gracefulExit(proc);
   }
