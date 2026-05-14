@@ -136,3 +136,29 @@ a check fail requires changing a `src/` file outside the current commit's topic 
 that is a fix-commit signal, not a scope-expansion signal.
 
 *Last updated: 2026-05-03, during Step 4 Phase D closeout.*
+
+---
+
+## F6: `src/runtime/policy.js` 是 dead code（Step 6 Phase 6.1 调研发现）
+
+**Status:** Deferred to post-v1.0 cleanup.
+
+**Context:** `src/runtime/policy.js` 导出 `defaultRuntimePolicy()`，其中声明：
+- `applyTargets: ['L1']`
+- `allowMemoryMdWrites: false`
+- `allowDailyNoteWrites: false`
+
+但 grep `src/` 未发现任何文件 import 这个函数——它是 dead code。
+
+**对外影响：** GitHub v0.2.0 README 的 "Current public default policy" 章节据此声明了 "MEMORY writes disabled / daily-note writes disabled"，但这两条**在运行时未被 enforcement**——是错误的对外承诺。
+
+**Phase 6.1 处理：** 新 README 不再声明这两条，改为以 Step 5 实际生效的安全机制（D5 dry-run + isolated preset）为核心。L1-only 作为补充说明保留（它确实硬编码在 `run-judge.js:70` 和 `update-registries.js:141` 中）。
+
+**Future action:** 独立 phase 决定 `policy.js` 的命运——三个选项：
+- **A:** 删除 `policy.js` 整个文件（干净清理 dead code）
+- **B:** 让 `policy.js` 真正接入运行时（实现 MEMORY / daily-note write enforcement）
+- **C:** 保留 `policy.js` 作为"未来 policy 系统的占位"，加 JSDoc 说明"目前未接入，留待未来 policy 框架使用"
+
+**优先级：** 低——dead code 不影响功能。但要在 v1.0.0 之前处理（对外稳定承诺前必须无 dead code 干扰）。
+
+*Last updated: 2026-05-14, during Step 6 Phase 6.1 research.*
