@@ -61,7 +61,7 @@ flowchart LR
     D --> E[分层存储<br/>L0 / L1 / L2 / L3]
     E --> F[工作记忆]
     F --> G[运行时上下文]
-    G --> H[Agent 回合]
+    G --> H[Agent 回合<br/>（宿主责任）]
     E --> I[策展执行<br/>合并 / 过期 / 校验]
     I --> E
 ```
@@ -74,7 +74,7 @@ flowchart LR
 >
 > 作者目前正在进行 PruneMem 与 Hermes Agent 的真实集成测试。在此之前写一份"30 秒上手指南"只能是猜测。本节将基于实际部署经验编写，而非假设。
 >
-> 在此期间，请参阅[集成指南](#集成指南)或 [docs/mcp-server.md](docs/mcp-server.md) 了解协议层配置。
+> 在此期间，请参阅 [docs/mcp-server.md](docs/mcp-server.md) 了解协议层配置。宿主专属集成指南（docs/integrations/）将在 Step 6 各 phase 逐步完善。
 
 ## 集成指南
 
@@ -146,11 +146,11 @@ skills/            # 宿主可加载的 skill 定义
 
 ## 路线图
 
-v0.3.0 之后的可能优先级：
+v0.3.0 之后的计划：
 
 - npm publish，实现一行命令安装
-- 经过测试的 Hermes SKILL.md 部署步骤
 - 更深度的宿主集成示例（超出 MCP 协议层）
+- 更多示例工作流（多宿主场景）
 - 真实场景验证后发布 v1.0.0 稳定版
 
 ## 许可证

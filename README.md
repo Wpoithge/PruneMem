@@ -61,7 +61,7 @@ flowchart LR
     D --> E[Layered storage<br/>L0 / L1 / L2 / L3]
     E --> F[Working memory]
     F --> G[Runtime context]
-    G --> H[Agent turn]
+    G --> H[Agent turn<br/>(host responsibility)]
     E --> I[Curator apply<br/>merge / expire / validate]
     I --> E
 ```
@@ -74,7 +74,7 @@ flowchart LR
 >
 > The author is currently the first real user testing PruneMem against Hermes Agent. Writing a "30-second setup" guide before that test would be guesswork. This section will be written based on actual deployment experience, not assumptions.
 >
-> In the meantime, see [Integration guides](#integration-guides) or [docs/mcp-server.md](docs/mcp-server.md) for protocol-level setup.
+> In the meantime, see [docs/mcp-server.md](docs/mcp-server.md) for protocol-level setup. Host-specific integration guides (docs/integrations/) are being written throughout Step 6.
 
 ## Integration guides
 
@@ -146,11 +146,11 @@ skills/            # Host-loadable skill definitions
 
 ## Roadmap
 
-Likely priorities after v0.3.0:
+After v0.3.0 ships:
 
 - npm publish for one-line installation
-- Hermes SKILL.md with tested deployment steps
 - Deeper host integration examples (beyond MCP protocol)
+- More example workflows (multi-host scenarios)
 - v1.0.0 stable release after real-world validation
 
 ## License
