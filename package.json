@@ -2,9 +2,10 @@
   "name": "prunemem",
   "version": "0.2.0",
   "private": false,
-  "description": "A layered, lifecycle-aware memory plugin for OpenClaw-style agents.",
+  "description": "MCP-compatible memory governance system for AI agents",
   "type": "module",
   "license": "MIT",
+  "main": "src/mcp/server.js",
   "bin": {
     "prunemem-mcp": "src/mcp/bin.js"
   },
@@ -14,6 +15,24 @@
     "mcp": "node src/mcp/bin.js",
     "test:mcp": "node tests/mcp/run-mvp-client.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wpoithge/PruneMem.git"
+  },
+  "homepage": "https://github.com/Wpoithge/PruneMem#readme",
+  "bugs": {
+    "url": "https://github.com/Wpoithge/PruneMem/issues"
+  },
+  "keywords": [
+    "mcp",
+    "memory",
+    "agent",
+    "ai",
+    "hermes",
+    "claude-code",
+    "codex"
+  ],
+  "author": "Wpoithge",
   "engines": {
     "node": ">=20"
   },
