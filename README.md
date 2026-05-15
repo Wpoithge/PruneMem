@@ -80,6 +80,7 @@ flowchart LR
 
 Host-specific setup guides (being written throughout Step 6):
 
+- [MCP capability surface](docs/integrations/mcp-surface.zh.md) (Chinese-only quick reference)
 - [Hermes Agent](docs/integrations/hermes.md)
 - [Claude Code](docs/integrations/claude-code.md)
 - [Codex CLI](docs/integrations/codex-cli.md)
