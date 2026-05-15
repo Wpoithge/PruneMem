@@ -8,9 +8,9 @@ For the complete git history, see the [GitHub commit log](https://github.com/Wpo
 
 ---
 
-## v0.3.0 — MCP integration (unreleased / WIP)
+## v0.3.0 — MCP integration
 
-**Status:** Documentation is being filled in throughout Step 6. The MCP server itself is complete and tested; host-specific integration guides (Hermes, Claude Code, Codex CLI) are work-in-progress.
+**Status:** Code complete and tested (15/15 regression + 44/44 MCP tests passing). Host-specific integration guides (Hermes, Claude Code, Codex CLI) are work-in-progress; see [Roadmap](README.md#roadmap) for what's still being filled in.
 
 ### Direction
 
