@@ -1,79 +1,61 @@
 # Changelog
 
-## [0.4.0] - 2026-05-10
+All notable changes to PruneMem are documented in this file.
 
-> **Note**: 0.3.0 was developed but never released as a versioned milestone.
-> It corresponds to Step 3 (lib+CLI dual-mode for all 13 core scripts).
-> See git tag `step3-done` for the codebase state at that point.
+This project uses a simplified narrative format rather than the strict [Keep a Changelog](https://keepachangelog.com) standard. Each version section describes the conceptual direction of the release, not an exhaustive commit-by-commit log.
 
-### Added
-- `src/lib/paths.js` `getPaths()` abstraction for host-agnostic path resolution.
-  Three presets: `default` (byte-compatible), `isolated` (test isolation),
-  `custom` (host adapter alias). See docs/paths.md for the integration guide.
-- `src/lib/cli-args.js` `parsePresetArgs` helper for `--preset` / `--paths` CLI flags.
-- 14 core scripts now accept `preset`, `override`, and `paths` parameters,
-  enabling host adapters to redirect read/write paths without forking.
-- `tests/regression/check-isolated-preset.js`: verifies isolated preset works correctly.
-- `tests/regression/check-no-pollution.js`: verifies dry-run doesn't write.
-- `docs/paths.md`: host adapter integration guide.
-- `docs/paths-design.md`: Step 4 internal design spec with full revision history.
+For the complete git history, see the [GitHub commit log](https://github.com/Wpoithge/PruneMem/commits/main).
 
-### Changed
-- All 13 lib化 core scripts now resolve paths through `getPaths()` instead of
-  hardcoded `examples/` paths. Default preset preserves byte-level compatibility.
-- Working memory and MEMORY.md now have read/write path separation under
-  `isolated` preset (D1 design revision).
+---
 
-### Breaking Changes
-- **`update-registries.js` no longer writes by default.** You must explicitly pass
-  `--write` (CLI) or `write: true` (function call) to enable writes. Without this,
-  the script computes the would-be inserts and returns the result without touching
-  disk. This prevents accidental contamination of demo workspace during local
-  development.
+## v0.3.0 — MCP integration (unreleased / WIP)
 
-  Migration:
-  - Before: `node src/core/update-registries.js --workspace ~/my-workspace`
-  - After:  `node src/core/update-registries.js --workspace ~/my-workspace --write`
+**Status:** Documentation is being filled in throughout Step 6. The MCP server itself is complete and tested; host-specific integration guides (Hermes, Claude Code, Codex CLI) are work-in-progress.
 
-  `run-sample-pipeline.js` and `maintain.js` propagate `--write` to downstream
-  `updateRegistries` calls — no user action required for those entry points.
+### Direction
 
-### Fixed
-- Issue #1: examples/registry/ contamination during direct execution. Now resolved
-  at the root cause via paths.js abstraction. See docs/known-issues.md.
-
-### Notes
-- The previously released `scripts/check-examples-clean.sh` is preserved as an
-  additional manual defense tool but is no longer required.
-
-## [0.2.0] - 2026-04-12
+PruneMem evolves from an OpenClaw-style plugin into an MCP-compatible memory governance system. The core layered-memory and registry infrastructure remains unchanged; the delivery surface now includes a standards-based MCP server so any compatible host can consume it without vendor-specific adapters.
 
 ### Added
-- public-safe V4 working-memory primitives (`working_state`, `working_event`, `runtime_context`, `context_bundle`)
-- public-safe V4.1 execution/progress primitives (`execution_plan`, `milestone_state`)
-- generic runtime-context assembly helpers and example CLI commands
-- public-safe V4.1 session archive snapshot builder with working-state/runtime-context relationship fields
-- sanitized V4/V4.1 example assets under `examples/working-memory/`
-- regression checks for working-memory merge/runtime-context generation, execution context, and session archives
-- detailed V4/V4.1 documentation explaining working memory, runtime context, hook integration, session/archive relationship, and execution/progress context
 
-### Changed
-- updated architecture, schema, layering, scope, and README docs from V3-only public baseline to V4.1-capable public abstraction
-- expanded schema version registry to include working-memory, runtime-context, execution, and session-archive artifacts
-- promoted repository package version from `0.1.0` to `0.2.0`
+- **11 MCP tools** (5 read + 4 single-write + 2 composite) exposed over stdio transport, locked to `@modelcontextprotocol/sdk@1.28.0`
+- Bilingual README (English + Chinese)
+- `docs/integrations/mcp-surface.zh.md` — MCP capability quick-reference (Chinese)
+- `scripts/check-tool-count.js` — single source of truth for tool count validation, wired into regression checks
+- Automated F3 write-warning test: `prunemem_run_sample_pipeline` writes `.generated.json` even under `write: false`
+- Explicit classification of three "not exposed" fields in `docs/mcp-tool-inventory.md`: M2 `paths`, C-3 `curatorApply.limit`, C-4 `maintain.timeoutMs`
 
-### Safety
-- kept all new materials generalized and synthetic
-- avoided private logs, machine-specific paths, secrets, and host-specific runtime payload copies
+### Unchanged
 
-## [0.1.0] - 2026-03-14
+The v0.2.0 core remains intact: layered long-term memory (L0–L3), registry-driven governance, lifecycle-aware curator, and CLI-based workflow.
 
-### Added
-- initial open-source repository skeleton
-- docs/config/examples/tests directory layout
-- core project scope and plugin architecture outline
-- adapter-oriented direction for retrieval and model providers
-- publicized validator / curator / source-repair core scripts
-- public maintain entry and regression checks
-- model provider config loader, factory, and initial adapter wiring
-- sample extract/judge/update pipeline CLIs with mock execution path
+### Work in progress
+
+- Hermes / Claude Code / Codex CLI integration guides: skeletons created, substance in Phase 6.4–6.7
+- Hermes field-test-derived `SKILL.md` (Phase 6.5)
+- Cross-host troubleshooting guide (Phase 6.8)
+
+### Migrating from v0.2.0
+
+- The MCP server is a new capability surface; all v0.2.0 CLI entry points are preserved and backward compatible.
+- The "Current public default policy" concept has been retired. The previous claims about MEMORY writes and daily-note writes being disabled were not enforced at runtime (the policy module was dead code). The actual safety model is now explicit: D5 dry-run defaults plus the `isolated` preset.
+- Recommended usage shifts from "CLI + config file" toward "MCP server + host integration" for users running MCP-compatible agents.
+
+---
+
+## v0.2.0 — [release notes archived on GitHub]
+
+See [GitHub release page](https://github.com/Wpoithge/PruneMem/releases/tag/v0.2.0) for the original release notes. Key direction: refinement of the v0.1.0 conceptual model with public-safe V4/V4.1 primitives (working memory, runtime context, execution plan, session archive), stricter schema validation, and richer examples.
+
+---
+
+## v0.1.0 — Initial conceptual release
+
+First public release establishing the core concepts:
+
+- Layered long-term memory (L0–L3)
+- Registry-driven governance (topics, dedupe)
+- Lifecycle-aware curator (merge, expire, validate)
+- CLI-based workflow for memory ingestion and maintenance
+
+Originally positioned as a "memory plugin for OpenClaw-style agents." This positioning has been revised in v0.3.0 to reflect the broader MCP-compatible deployment model.
