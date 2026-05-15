@@ -80,6 +80,7 @@ flowchart LR
 
 宿主专属配置指南（Step 6 各 phase 逐步完善）：
 
+- [MCP 能力面](docs/integrations/mcp-surface.zh.md)（快查表）
 - [Hermes Agent](docs/integrations/hermes.zh.md)
 - [Claude Code](docs/integrations/claude-code.zh.md)
 - [Codex CLI](docs/integrations/codex-cli.zh.md)
