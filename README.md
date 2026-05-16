@@ -45,9 +45,9 @@ It intentionally **does not** include:
 
 ## Current release status
 
-**Current version: `0.2.0`**
+**Current version: `0.3.0`**
 
-`0.3.0` (in progress) adds MCP server support, making PruneMem usable as a standard MCP tool server from any compatible host.
+MCP server support makes PruneMem usable as a standard MCP tool server from any compatible host.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 
