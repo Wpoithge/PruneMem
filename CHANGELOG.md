@@ -45,7 +45,7 @@ The v0.2.0 core remains intact: layered long-term memory (L0–L3), registry-dri
 
 ## v0.2.0 — [release notes archived on GitHub]
 
-See [GitHub release page](https://github.com/Wpoithge/PruneMem/releases/tag/v0.2.0) for the original release notes. Key direction: refinement of the v0.1.0 conceptual model with public-safe V4/V4.1 primitives (working memory, runtime context, execution plan, session archive), stricter schema validation, and richer examples.
+See [GitHub release page](https://github.com/Wpoithge/PruneMem/releases/tag/V0.2.0) for the original release notes. Key direction: refinement of the v0.1.0 conceptual model with public-safe V4/V4.1 primitives (working memory, runtime context, execution plan, session archive), stricter schema validation, and richer examples.
 
 ---
 
