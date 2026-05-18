@@ -150,6 +150,19 @@ PruneMem ships with two layers of write protection enabled by default:
 
 Additionally, the judgment pipeline targets the `L1` layer by default — the shallowest, most ephemeral memory layer — until the caller explicitly upgrades to deeper layers.
 
+## Data ownership
+
+PruneMem stores memory using its own schema (working-state, execution-plan, registries, lifecycle, topics, dedupe). This schema is documented in [docs/](docs/) but is **not** a standard adopted by other memory systems.
+
+This means:
+
+- **You can leave anytime**. Uninstall PruneMem via `hermes mcp remove prunemem` (or equivalent) and your host works as before. Your memory data files stay on disk (under your workspace) for you to inspect, archive, or delete.
+- **However, data does not transfer to other memory tools automatically**. If you accumulate memory in PruneMem and later want to switch to agentmemory, memos, letta, mem0, etc., manual data migration is required. PruneMem currently does not provide automated export/import tools.
+
+We acknowledge this is a real limitation. Import/export tooling for cross-system migration is on the [Roadmap](#roadmap) (planned, no specific version).
+
+Until then: if you anticipate needing migration, keep your own backups of the workspace directory.
+
 ## Repository layout
 
 ```
