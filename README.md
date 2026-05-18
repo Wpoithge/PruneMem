@@ -86,6 +86,48 @@ Host-specific setup guides (being written throughout Step 6):
 - [Codex CLI](docs/integrations/codex-cli.md)
 - [Troubleshooting](docs/integrations/troubleshooting.md)
 
+## For AI agents
+
+If you are an AI agent helping a user integrate PruneMem with their host, this section is for you.
+
+PruneMem is an **MCP server** with **stdio transport**. It is not a Python package, npm package, or CLI tool.
+
+### Prerequisites
+
+- Node.js (any recent LTS version)
+- `npm` available in PATH
+- Git available
+
+### Installation steps
+
+```bash
+git clone https://github.com/Wpoithge/PruneMem.git
+cd PruneMem
+npm install
+```
+
+### Host-specific registration commands
+
+| Host | Registration command |
+|---|---|
+| Hermes Agent | `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js` |
+| Claude Code | _Integration guide coming in Phase 6.6 — see [docs/integrations/claude-code.md](docs/integrations/claude-code.md)_ |
+| Codex CLI | _Integration guide coming in Phase 6.7 — see [docs/integrations/codex-cli.md](docs/integrations/codex-cli.md)_ |
+
+For Hermes, after registration, verify with:
+
+```bash
+hermes mcp test prunemem
+```
+
+Expected output: `✓ Connected` and `Tools discovered: 11`.
+
+### After integration
+
+PruneMem provides 11 MCP tools (5 read-class + 4 single-write + 2 composite). All write-class tools default to `write: false` (dry-run). See [docs/mcp-tools.md](docs/mcp-tools.md) for the complete tool catalog.
+
+**Note**: PruneMem currently exposes its 11 tools but does not yet have an explicit usage strategy for "how the agent should call them" — this is in development (Phase 6.5). Until then, agents may call PruneMem tools at their own discretion based on tool descriptions.
+
 ## MCP capabilities
 
 PruneMem exposes its memory governance operations as an [MCP](https://modelcontextprotocol.io) server with **11 tools** (stdio transport).
@@ -107,6 +149,19 @@ PruneMem ships with two layers of write protection enabled by default:
 2. **Isolated preset** — Pass `preset: "isolated"` to redirect all writes to a sandboxed `.prunemem-isolated/` directory, leaving the real workspace untouched.
 
 Additionally, the judgment pipeline targets the `L1` layer by default — the shallowest, most ephemeral memory layer — until the caller explicitly upgrades to deeper layers.
+
+## Data ownership
+
+PruneMem stores memory using its own schema (working-state, execution-plan, registries, lifecycle, topics, dedupe). This schema is documented in [docs/](docs/) but is **not** a standard adopted by other memory systems.
+
+This means:
+
+- **You can leave anytime**. Uninstall PruneMem via `hermes mcp remove prunemem` (or equivalent) and your host works as before. Your memory data files stay on disk (under your workspace) for you to inspect, archive, or delete.
+- **However, data does not transfer to other memory tools automatically**. If you accumulate memory in PruneMem and later want to switch to agentmemory, memos, letta, mem0, etc., manual data migration is required. PruneMem currently does not provide automated export/import tools.
+
+We acknowledge this is a real limitation. Import/export tooling for cross-system migration is on the [Roadmap](#roadmap) (planned, no specific version).
+
+Until then: if you anticipate needing migration, keep your own backups of the workspace directory.
 
 ## Repository layout
 
@@ -152,6 +207,7 @@ After v0.3.0 ships:
 - npm publish for one-line installation
 - Deeper host integration examples (beyond MCP protocol)
 - More example workflows (multi-host scenarios)
+- Memory data import/export tooling for cross-system migration (planned, no specific version)
 - v1.0.0 stable release after real-world validation
 
 ## License
