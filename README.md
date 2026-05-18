@@ -207,6 +207,7 @@ After v0.3.0 ships:
 - npm publish for one-line installation
 - Deeper host integration examples (beyond MCP protocol)
 - More example workflows (multi-host scenarios)
+- Memory data import/export tooling for cross-system migration (planned, no specific version)
 - v1.0.0 stable release after real-world validation
 
 ## License
