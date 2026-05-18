@@ -86,6 +86,48 @@ flowchart LR
 - [Codex CLI](docs/integrations/codex-cli.zh.md)
 - [故障排查](docs/integrations/troubleshooting.zh.md)
 
+## 面向 AI agent
+
+如果你是协助用户接入 PruneMem 的 AI agent，本节针对你而写。
+
+PruneMem 是一个 **MCP server**，使用 **stdio transport**。它不是 Python 包、不是 npm 包、不是 CLI 工具。
+
+### 前置条件
+
+- Node.js（任何近期 LTS 版本）
+- `npm` 在 PATH 中可用
+- Git 可用
+
+### 安装步骤
+
+```bash
+git clone https://github.com/Wpoithge/PruneMem.git
+cd PruneMem
+npm install
+```
+
+### 各 host 的注册命令
+
+| Host | 注册命令 |
+|---|---|
+| Hermes Agent | `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js` |
+| Claude Code | _Phase 6.6 中，见 [docs/integrations/claude-code.zh.md](docs/integrations/claude-code.zh.md)_ |
+| Codex CLI | _Phase 6.7 中，见 [docs/integrations/codex-cli.zh.md](docs/integrations/codex-cli.zh.md)_ |
+
+对 Hermes，注册后请验证：
+
+```bash
+hermes mcp test prunemem
+```
+
+期望输出：`✓ Connected` 和 `Tools discovered: 11`。
+
+### 接入之后
+
+PruneMem 提供 11 个 MCP tool（5 个 read-class + 4 个 single-write + 2 个 composite）。所有写类 tool 默认 `write: false`（dry-run）。完整 tool 目录见 [docs/mcp-tools.md](docs/mcp-tools.md)。
+
+**说明**：PruneMem 当前暴露 11 个 tool，但还**没有明确的 agent 调用策略**（即"agent 应该何时调用哪个 tool"）——这是 Phase 6.5 正在开发的内容。在此之前，agent 可基于 tool description 自行判断调用时机。
+
 ## MCP 能力
 
 PruneMem 将记忆治理操作暴露为 [MCP](https://modelcontextprotocol.io) 服务器，包含 **11 个 tool**（stdio 传输）。
@@ -107,6 +149,19 @@ PruneMem 默认开启两层写入保护：
 2. **隔离 preset** — 传入 `preset: "isolated"` 把所有写入重定向到沙箱目录 `.prunemem-isolated/`，实际工作空间不受影响。
 
 此外，判定 pipeline 默认指向 `L1` 层——最浅、最易过期的记忆层——除非调用方显式指定更深的层。
+
+## 数据所有权
+
+PruneMem 使用自定义 schema 存储记忆数据（working-state、execution-plan、registries、lifecycle、topics、dedupe）。schema 在 [docs/](docs/) 中有说明，但**不是**其他记忆系统采用的标准。
+
+这意味着：
+
+- **你可以随时离开**。通过 `hermes mcp remove prunemem`（或等价命令）卸载 PruneMem，host 恢复原状。你的记忆数据文件保留在磁盘上（你的 workspace 下），便于检查、归档或删除。
+- **数据不会自动迁移到其他记忆工具**。如果你在 PruneMem 中积累了记忆，后来想换成 agentmemory、memos、letta、mem0 等，需要手动迁移。PruneMem 当前不提供自动化的导入/导出工具。
+
+我们承认这是一个真实的限制。跨系统迁移工具在 [路线图](#路线图) 中（已规划，无具体版本）。
+
+在此之前：如果你预期需要迁移，请自行备份 workspace 目录。
 
 ## 仓库结构
 
@@ -152,6 +207,7 @@ v0.3.0 之后的计划：
 - npm publish，实现一行命令安装
 - 更深度的宿主集成示例（超出 MCP 协议层）
 - 更多示例工作流（多宿主场景）
+- 跨系统迁移的内存数据导入/导出工具（已规划，无具体版本）
 - 真实场景验证后发布 v1.0.0 稳定版
 
 ## 许可证
