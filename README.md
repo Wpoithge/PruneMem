@@ -86,6 +86,48 @@ Host-specific setup guides (being written throughout Step 6):
 - [Codex CLI](docs/integrations/codex-cli.md)
 - [Troubleshooting](docs/integrations/troubleshooting.md)
 
+## For AI agents
+
+If you are an AI agent helping a user integrate PruneMem with their host, this section is for you.
+
+PruneMem is an **MCP server** with **stdio transport**. It is not a Python package, npm package, or CLI tool.
+
+### Prerequisites
+
+- Node.js (any recent LTS version)
+- `npm` available in PATH
+- Git available
+
+### Installation steps
+
+```bash
+git clone https://github.com/Wpoithge/PruneMem.git
+cd PruneMem
+npm install
+```
+
+### Host-specific registration commands
+
+| Host | Registration command |
+|---|---|
+| Hermes Agent | `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js` |
+| Claude Code | _Integration guide coming in Phase 6.6 — see [docs/integrations/claude-code.md](docs/integrations/claude-code.md)_ |
+| Codex CLI | _Integration guide coming in Phase 6.7 — see [docs/integrations/codex-cli.md](docs/integrations/codex-cli.md)_ |
+
+For Hermes, after registration, verify with:
+
+```bash
+hermes mcp test prunemem
+```
+
+Expected output: `✓ Connected` and `Tools discovered: 11`.
+
+### After integration
+
+PruneMem provides 11 MCP tools (5 read-class + 4 single-write + 2 composite). All write-class tools default to `write: false` (dry-run). See [docs/mcp-tools.md](docs/mcp-tools.md) for the complete tool catalog.
+
+**Note**: PruneMem currently exposes its 11 tools but does not yet have an explicit usage strategy for "how the agent should call them" — this is in development (Phase 6.5). Until then, agents may call PruneMem tools at their own discretion based on tool descriptions.
+
 ## MCP capabilities
 
 PruneMem exposes its memory governance operations as an [MCP](https://modelcontextprotocol.io) server with **11 tools** (stdio transport).
