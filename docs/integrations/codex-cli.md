@@ -146,7 +146,7 @@ Codex CLI does not add visible prefixes to MCP tool names in conversation. Tools
 - `prunemem_curator_apply`
 - (and the remaining tools)
 
-Internally, at the API level, Codex CLI references tools as `prunemem.prunemem_runtime_context` (server name + tool name), but you use the short name in conversation.
+Internally, tools are namespaced by server — references typically take the form `<server>.<tool>` — but you use the short name in conversation.
 
 You can ask Codex CLI "what tools does the prunemem MCP server provide?" and it will list them.
 
@@ -160,7 +160,7 @@ PruneMem is designed to be safe by default. For full details, see [README — Sa
 - **isolated preset**: passing `preset: "isolated"` redirects all writes to a `.prunemem-isolated/` sandbox directory
 - **F3 warning**: `prunemem_run_sample_pipeline` writes `.generated.json` intermediate files even when `write: false` — use `preset: "isolated"` if you want to avoid touching your real workspace
 
-Codex CLI's own sandbox configuration (the `[sandbox]` section in `~/.codex/config.toml`) can further restrict the filesystem paths PruneMem can access. In testing, the default sandbox did not block PruneMem read operations.
+Codex CLI's own sandbox configuration (the `[sandbox]` section in `~/.codex/config.toml`) can further restrict the filesystem paths PruneMem can access. In testing with the default sandbox mode, PruneMem read operations were not blocked.
 
 ---
 
@@ -247,7 +247,7 @@ This is expected behavior in v0.3.0. A usage strategy guide (specifying when and
 
 ### PruneMem MCP server does not respond to SIGINT (Ctrl+C)
 
-When running `node src/mcp/bin.js` manually in a terminal for testing, pressing `Ctrl+C` does not exit the process.
+When running `node src/mcp/bin.js` manually in a terminal for testing, pressing `Ctrl+C` does not exit the process. This is common behavior for Node.js stdio-based MCP servers, not specific to PruneMem.
 
 Workarounds:
 - `Ctrl+\` (SIGQUIT)

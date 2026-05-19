@@ -146,7 +146,7 @@ Codex CLI 在对话中不给 MCP tool 名加可见前缀。PruneMem 的 tool 直
 - `prunemem_curator_apply`
 - （以及其余 tool）
 
-Codex CLI 在 API 层面内部以 `prunemem.prunemem_runtime_context`（server 名 + tool 名）引用 tool，但对话中直接使用短名称即可。
+Tool 在内部按 server 命名空间组织——引用形式通常为 `<server>.<tool>`——但对话中直接使用短名称即可。
 
 可以问 Codex CLI"prunemem MCP server 提供哪些 tool？"，它会列出完整列表。
 
@@ -160,7 +160,7 @@ PruneMem 的设计默认安全。完整说明见 [README — Safety defaults](..
 - **isolated preset**：传 `preset: "isolated"` 将所有写入重定向到 `.prunemem-isolated/` 沙箱目录
 - **F3 警告**：`prunemem_run_sample_pipeline` 即使 `write: false`，仍会写 `.generated.json` 中间产物——如需避免污染真实 workspace，应传 `preset: "isolated"`
 
-Codex CLI 自身的 sandbox 配置（`~/.codex/config.toml` 中的 `[sandbox]` 段）会进一步限制 PruneMem 可访问的文件系统范围。实测中默认 sandbox 不会拦截 PruneMem 的读操作。
+Codex CLI 自身的 sandbox 配置（`~/.codex/config.toml` 中的 `[sandbox]` 段）会进一步限制 PruneMem 可访问的文件系统范围。实测中，默认 sandbox 模式下不会拦截 PruneMem 的读操作。
 
 ---
 
@@ -229,7 +229,7 @@ codex mcp add prunemem -- /absolute/path/to/node /absolute/path/to/PruneMem/src/
 
 ### 调用 tool 后返回 `ok: false`
 
-不是错误，是 core 函数结构化返回。检查响应中的 `notes` 或 `error` 字段了解具体原因。
+这不是崩溃，是结构化返回。检查响应中的 `notes` 或 `error` 字段了解具体原因。
 
 完整的错误处理说明见 [docs/mcp-server.md](../mcp-server.md)。
 
@@ -247,7 +247,7 @@ codex mcp add prunemem -- /absolute/path/to/node /absolute/path/to/PruneMem/src/
 
 ### PruneMem MCP server 不响应 SIGINT（Ctrl+C）
 
-在终端直接运行 `node src/mcp/bin.js` 进行手动测试时，按 `Ctrl+C` 不会退出进程。
+在终端直接运行 `node src/mcp/bin.js` 进行手动测试时，按 `Ctrl+C` 不会退出进程。这是基于 Node.js stdio 的 MCP server 的常见行为，不是 PruneMem 特有的问题。
 
 退出方法：
 - `Ctrl+\`（SIGQUIT）
