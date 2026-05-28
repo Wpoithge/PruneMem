@@ -1,0 +1,18 @@
+{
+  "name": "prunemem-memory",
+  "description": "PruneMem memory governance for Claude Code: agent playbook skill + lifecycle hooks for context snapshot/rebuild and working state management",
+  "version": "0.3.0",
+  "author": {
+    "name": "Wpoithge"
+  },
+  "homepage": "https://github.com/Wpoithge/PruneMem",
+  "repository": "https://github.com/Wpoithge/PruneMem",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "mcp",
+    "agent",
+    "context-management",
+    "lifecycle-hooks"
+  ]
+}
