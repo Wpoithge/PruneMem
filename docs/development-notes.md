@@ -138,3 +138,116 @@ Note: trace enabled (PRUNEMEM_HOOK_TRACE=1) logs prompt text to trace log (priva
 
 SessionStart and UserPromptSubmit use identical structure, only `hookEventName` differs. `_emit_additional_context` is parameterized, defaults to SessionStart.
 
+## Hermes integration (Step 6.5.4)
+
+### Integration shape: skill + MCP (no lifecycle hooks)
+
+Hermes integration is **skill-driven + MCP tools** — no automatic lifecycle hooks.
+
+- **MCP**: PruneMem MCP server registered as `prunemem` in `~/.hermes/config.yaml`
+  (`mcp_servers.prunemem`), 11 tools, `hermes mcp test prunemem` passes.
+- **Skill**: `skills/prunemem-memory-governance/SKILL.md` installed into
+  `~/.hermes/skills/memory/prunemem-memory-governance/` (manual copy;
+  `hermes skills install` does not accept local directories or file URLs).
+
+### Why no hook automation
+
+Hermes shell hooks (declared in `config.yaml` `hooks:`) support only:
+`pre_tool_call`, `post_tool_call`, `pre_llm_call`, `subagent_stop`.
+
+- **No session-start / compact / user-prompt events**.
+- **Hook stdout is not parsed for `additionalContext` injection** — hooks are
+  side-effect-only (notification / logging), not content-injection channels.
+- Codex's SessionStart-inject / PreCompact-snapshot / UserPromptSubmit-recover
+  pattern **cannot be ported** to Hermes.
+
+### Why memory provider (beta) was abandoned
+
+Hermes supports one external memory provider at a time (`memory.provider`).
+Technically PruneMem could register as a provider via a Python plugin in
+`$HERMES_HOME/plugins/<name>/`, but this was rejected because:
+
+1. **Category mismatch**: The provider contract is retrieval/storage
+   (`prefetch`, `sync_turn`), while PruneMem is a governance/curation system.
+2. **Occupies the single provider slot**: Mutually exclusive with mem0, honcho,
+   etc. — PruneMem and retrieval memory should be complementary, not competing.
+3. **Language mismatch**: Hermes provider plugins are Python; PruneMem is
+   JS+bash. Would require a new Python adapter layer.
+4. **Firehose vs prune**: Per-turn `prefetch`/`sync` contradicts PruneMem's
+   prune/curate philosophy.
+
+**Key future note**: Hermes's memory provider interface is the **only door to
+get deterministic lifecycle automation** on Hermes (`on_turn_start`,
+`on_session_switch(reason=compression)`, `on_session_end`, per-turn prefetch
+injection). Shell hooks do not offer these. If deterministic continuity ever
+becomes a hard requirement on Hermes, memory provider is the only path
+(costs: see above). Also note: `on_pre_compress()` return value is currently
+ignored by the caller.
+
+### MCP pointer
+
+Hermes `mcp_servers.prunemem` points to the clone at
+`/Users/yang/Tools/prunemem/PruneMem/` (functionally equivalent to Codex's
+clone; harmless, to be unified in 6.5.6).
+
+### Skill installation
+
+Top-level `skills/prunemem-memory-governance/` was copied into
+`~/.hermes/skills/memory/prunemem-memory-governance/`.
+
+- Frontmatter is a **Hermes superset** (`version`, `author`, `license`,
+  `platforms`, `metadata.hermes.tags`) — CC/Codex use the plugin-bundled copy
+  (`plugins/claude-code/skills/...`) with a minimal frontmatter.
+- The two frontmatters are **intentionally divergent**; unification will be
+  evaluated in 6.5.6 (CC/Codex likely ignore extra fields, but needs testing).
+
+### Hermes CLI limitation discovered
+
+`hermes skills inspect <name>` only resolves hub-installed or bundled skills.
+It **does not find local-directory skills** even though `hermes skills list`
+shows them. This is a Hermes v0.14.0 behavior, not an installation failure.
+
+## Step 6.5.4 补充 — Hermes working-state 写路径诊断与 6.5.6 修复计划
+
+实测结论(α = skill + MCP):
+- 读路径:可靠自动。agent 在 Hermes 会话中自动调用 prunemem 读回 working-state,recall/续接价值已落地。
+- 写路径:skill 内容正确——当 skill 加载进上下文时,agent 会规范地"写 delta 文件 →
+  update_working_state(dry-run → write)→ get_working_state 验证",不手编(已实测证明)。
+  **但 Hermes 的 skill 自动加载对写任务不可靠。**
+
+Hermes skill 加载机制(取证 + 实测):渐进式披露。系统提示常驻各 skill 的 `description`
+(快照见 `~/.hermes/.skills_prompt_snapshot.json`),完整 SKILL.md 由模型按相关性 / 被点名时
+按需加载(会话里显示 `📚 skill`)。
+- 现象:显式点名或询问 skill → 加载(📚)→ agent 写对;一句"把进展记录进工作状态"这类
+  任务 prompt → 不加载 → agent 裸奔 → 直接手编 working-state 文件。
+- 试过且无效的杠杆:
+  - 改进 `description` 加触发词(含中文原话"记录进展""更新工作状态""把进展记录进工作状态")
+    —— 仍未触发自动加载。
+  - `hermes curator pin` —— 仅保护 skill 不被 curator 归档,**非上下文注入**,不能强制加载。
+  - `.skills_prompt_snapshot.json` 机制飘忽(测试期间一度消失且不重建,可能导致 skill 描述
+    未进 prompt)。
+
+6.5.6 修复计划(写路径稳健解):
+- **核心:把写工作流要点写进 `update_working_state` 工具的 `description`**(input 是
+  `{delta:{...}}` 文件路径、数组用 `_added`/`_set` 后缀、标量直给、绝不手编 working-state 文件)。
+  工具 description 在模型上下文里**常驻**,不依赖 skill 加载——根治"无 skill + 工具 description
+  无用 → 手编"这一失败模式。
+- **选配:让 `update_working_state` 直接收内联 delta**(加 `delta` 对象参数),省掉"写文件→
+  传路径"两步,进一步降低误用。
+- **依赖:Hermes/Codex 用的是 clone(`/Users/yang/Tools/...`),需 clone 对账(重指向主仓库
+  或更新 clone)才能在 Hermes 上生效**;与 6.5.6 既有的 clone 统一项合并。
+- 修复后在 Hermes 复测写路径:不喂 skill、直接下写任务,看是否凭工具 description 正确调用、
+  不手编。
+
+Hermes 上 α 的诚实定位:**读 = 自动可靠;写 = skill/工具逻辑正确,但需常驻工具 description
+加持(6.5.6)或用户显式点名 skill 才可靠。**
+
+### 6.5.6 工具 description 还需覆盖的一个陷阱(实测 doc-10/11)
+
+`update_working_state` 的 `input` 必须是 **update-input** 形状(顶层 `delta`):
+`{"delta": {...}}`;**不是** generated working-event 形状(`{"state_delta": {...}}`)。
+agent 在实测中把两者搞混,写了 working-event 的 `state_delta`,导致 `update_working_state`
+只读 `input.delta`(为空)→ 返回 `ok:true`/`written:true` 但只动了 `updated_at`,目标字段未变
+(空合并)。6.5.6 的工具 description 自解释要明确:input 取 `delta`、给出最小正确形状、并提示
+"working-event 的 state_delta 不会被读取"。
+

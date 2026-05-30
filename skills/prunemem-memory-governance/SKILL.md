@@ -1,6 +1,13 @@
 ---
 name: prunemem-memory-governance
-description: Use when the user works with PruneMem memory governance - starting a session, switching tasks, completing milestones, reaching context capacity, or explicitly asking to remember/summarize/archive. Covers all 11 prunemem_* tools; reads can be invoked autonomously, writes require user confirmation.
+description: Use when the user records, updates, saves, or reviews PruneMem working state or task progress (e.g. "记录进展", "更新工作状态", "把进展记录进工作状态", "record progress", "update working state"), starts a session, switches tasks, completes milestones, reaches context capacity, or asks to remember/summarize/archive. Covers all 11 prunemem_* tools; reads can be invoked autonomously, writes require user confirmation.
+version: 0.3.0
+author: Wpoithge
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [memory, governance, working-state, context-management, mcp]
 ---
 
 # PruneMem Memory Governance
@@ -44,6 +51,40 @@ READS AUTONOMOUS, WRITES NEED CONFIRMATION, ARCHIVE_SESSION IS NOT THE ANSWER.
 5. **没有从 live conversation 直接归档的 tool。**
    `src/archive/build-session-packet.js` 未暴露为 MCP tool。
    Agent 不能把当前对话转成 session packet。
+
+## 写 working-state 的正确方式（update_working_state）
+
+**绝不直接手编 working-state JSON 文件**（如 `examples/working-memory/*.working-state.json`
+或 `*.working-event.json`）。手编绕过 schema 校验与 merge，会损坏状态，且 isolated preset 下
+读写分离时改错文件根本不生效。所有对 working-state 的写入**必须经
+`prunemem_update_working_state`**，不要用文件编辑工具去改这些文件。
+
+调用工作流：
+
+1. **写一个 delta JSON 文件**（如 `/tmp/prunemem-delta.json`），结构是 `{"delta": {...}}`：
+   - **标量字段直接给值**：`task_title` / `goal` / `status` / `user_request_summary` /
+     `last_user_intent` / `last_agent_action_summary`。
+   - **数组字段必须带后缀，裸字段名会被静默忽略（no-op）**：
+     - `_added` 追加：`completed_steps_added`、`in_progress_steps_added`、
+       `next_actions_added`、`decisions_confirmed_added`、`open_questions_added`、
+       `blocked_items_added`、`artifacts_added` 等。
+     - `_set` 整体替换：如 `in_progress_steps_set`、`next_actions_set`。
+2. **以 `write: false`（dry-run）调 `prunemem_update_working_state`**，`input` 传上面那个
+   文件的**路径字符串**（不是内联对象——传内联对象会报 schema 错），查看合并结果。
+3. 用户已**显式要求**写入（如"把进展记录进工作状态"）→ 直接 `write: true`；
+   若是 **agent 自主**决定的写入 → 先向用户确认，再 `write: true`。
+4. **写后验证**：用 `prunemem_get_working_state` 确认目标字段确实变了。`ok: true` /
+   `written: true` 只代表 tool 执行和落盘成功，**不代表 delta 被接受**——例如数组字段忘加
+   `_added`/`_set` 后缀就会被静默忽略，state_delta 为空。若字段没变，**回到第 1 步检查 delta
+   形状（后缀对不对）后重试，不要改成手编文件，也不要因为 `ok:true` 就向用户报成功**。
+
+示例 delta 文件内容：
+
+```json
+{"delta": {"last_agent_action_summary": "完成了数据导入", "completed_steps_added": ["导入CSV并校验"]}}
+```
+
+然后调用：`prunemem_update_working_state`，`input="/tmp/prunemem-delta.json"`，`write: true`。
 
 ## When to Use This Skill
 
