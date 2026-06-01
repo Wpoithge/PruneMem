@@ -246,9 +246,9 @@ Confirm:
 
 After integrating PruneMem, Claude Code does not automatically use `prunemem_*` tools for memory management. You need to explicitly prompt Claude Code to call a specific PruneMem tool in your conversation.
 
-This is expected behavior in v0.3.0. A usage strategy guide (specifying when and how Claude Code should call PruneMem tools) is in development in Phase 6.5. Until then, you can include a session-opening prompt such as:
+This is expected behavior in the base v0.3.0 MCP. Proactive usage guidance — when and how Claude Code should call PruneMem tools — is now provided by the PruneMem governance skill (`skills/prunemem-memory-governance/SKILL.md`) and the agent playbook (`docs/agent-playbook.md`).
 
-> "This session uses PruneMem for memory governance. At the end of our session, please call `prunemem_archive_session` to archive the conversation."
+Do **not** prompt the agent to call `prunemem_archive_session` to "archive the conversation." `archive_session` is pure computation over an existing session packet: it returns an archive object, writes nothing on its own, and cannot turn a live conversation into an archive.
 
 ### PruneMem MCP server does not respond to SIGINT (Ctrl+C)
 
