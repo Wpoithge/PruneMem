@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 
 # 准备:用一个隔离的 trace path 避免污染用户家目录
 TRACE_PATH=/tmp/pm-test-trace.log

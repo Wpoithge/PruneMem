@@ -158,7 +158,7 @@ getPaths({
   workspace: '/some/workspace',
   preset: 'custom',
   override: {
-    registry: '/Users/yang/.hermes/memory/registries',
+    registry: '/Users/<username>/.hermes/memory/registries',
     memoryMd: null,  // Hermes 不用 MEMORY.md
   }
 })

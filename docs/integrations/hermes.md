@@ -138,7 +138,7 @@ MCP servers appear as a separate category after the built-in toolsets.
 Example — querying runtime context for a workspace:
 
 ```
-User: Please call prunemem_runtime_context with workspace /Users/yang/Tools/prunemem/PruneMem and preset isolated.
+User: Please call prunemem_runtime_context with workspace /Users/<username>/Tools/prunemem/PruneMem and preset isolated.
 
 Hermes: [calls prunemem_runtime_context]
 ✓ prunemem_runtime_context completed

@@ -3,7 +3,7 @@
 
 set -e
 
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 HOOK="./plugins/claude-code/hooks/post-tool-use.sh"
 
 # --- Test 1: disabled (no PRUNEMEM_ENABLE_POSTTOOL) → no-op ---

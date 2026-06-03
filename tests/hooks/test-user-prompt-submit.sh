@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 HOOK="./plugins/claude-code/hooks/user-prompt-submit.sh"
 
 TEST_WS=/tmp/pm-ups-test

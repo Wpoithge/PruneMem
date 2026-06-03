@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 
 TEST_WS=/tmp/pm-codex-ws
 rm -rf "$TEST_WS" && mkdir -p "$TEST_WS"

@@ -3,7 +3,7 @@
 
 set -e
 
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 HOOK="./plugins/claude-code/hooks/session-start.sh"
 
 # --- Test 1: source=clear, no-op ---
@@ -26,7 +26,7 @@ fi
 # --- Test 3: source=startup with real workspace ---
 # Expect exit 0; stdout may or may not contain content depending on working state.
 (
-  export CLAUDE_PROJECT_DIR=/Users/yang/Desktop/PruneMem
+  export CLAUDE_PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
   echo '{"source":"startup"}' | bash "$HOOK" > /tmp/out3 2> /tmp/err3
 )
 exit3=$?

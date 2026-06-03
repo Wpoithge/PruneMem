@@ -187,7 +187,7 @@ ignored by the caller.
 ### MCP pointer
 
 Hermes `mcp_servers.prunemem` points to the clone at
-`/Users/yang/Tools/prunemem/PruneMem/` (functionally equivalent to Codex's
+`/Users/<username>/Tools/prunemem/PruneMem/` (functionally equivalent to Codex's
 clone; harmless, to be unified in 6.5.6).
 
 ### Skill installation
@@ -234,7 +234,7 @@ Hermes skill 加载机制(取证 + 实测):渐进式披露。系统提示常驻�
   无用 → 手编"这一失败模式。
 - **选配:让 `update_working_state` 直接收内联 delta**(加 `delta` 对象参数),省掉"写文件→
   传路径"两步,进一步降低误用。
-- **依赖:Hermes/Codex 用的是 clone(`/Users/yang/Tools/...`),需 clone 对账(重指向主仓库
+- **依赖:Hermes/Codex 用的是 clone(`/Users/<username>/Tools/...`),需 clone 对账(重指向主仓库
   或更新 clone)才能在 Hermes 上生效**;与 6.5.6 既有的 clone 统一项合并。
 - 修复后在 Hermes 复测写路径:不喂 skill、直接下写任务,看是否凭工具 description 正确调用、
   不手编。

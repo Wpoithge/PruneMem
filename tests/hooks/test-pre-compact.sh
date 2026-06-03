@@ -3,7 +3,7 @@
 
 set -e
 
-cd /Users/yang/Desktop/PruneMem
+cd "$(dirname "$0")/../.." || exit 1
 HOOK="./plugins/claude-code/hooks/pre-compact.sh"
 
 TEST_WS=/tmp/pm-test-precompact
