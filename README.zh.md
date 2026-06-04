@@ -35,6 +35,7 @@ PruneMem 不替代你的向量存储或检索机制。它坐在更上游：你�
 - 工作记忆和执行上下文原语
 - 会话归档构建器
 - MCP 服务器，暴露 11 个 tool，可接入任何兼容 MCP 的宿主
+- 宿主集成资产：governance skill、agent playbook，以及 Claude Code / Codex 插件（生命周期 hooks）
 
 它**不包含**：
 
@@ -70,21 +71,32 @@ flowchart LR
 
 ## 快速开始
 
-> **本节将在 Phase 6.4（Hermes 集成测试）完成后填写。**
->
-> 作者目前正在进行 PruneMem 与 Hermes Agent 的真实集成测试。在此之前写一份"30 秒上手指南"只能是猜测。本节将基于实际部署经验编写，而非假设。
->
-> 在此期间，请参阅 [docs/mcp-server.md](docs/mcp-server.md) 了解协议层配置。宿主专属集成指南（docs/integrations/）将在 Step 6 各 phase 逐步完善。
+PruneMem 是一个 MCP server（stdio 传输）。克隆、安装依赖、向你的 host 注册：
+
+```bash
+git clone https://github.com/Wpoithge/PruneMem.git
+cd PruneMem
+npm install
+```
+
+向你的 host 注册（用 `bin.js` 的绝对路径）：
+
+- **Claude Code** — `claude mcp add --scope user prunemem node /absolute/path/to/PruneMem/src/mcp/bin.js`
+- **Codex CLI** — `codex mcp add prunemem -- node /absolute/path/to/PruneMem/src/mcp/bin.js`
+- **Hermes Agent** — `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js`
+
+应能发现 **11 个 tool**。要让 agent 主动治理记忆——即"何时、如何调用这些 tool"的指引——安装 governance skill；在 Claude Code / Codex 上还可装打包了生命周期 hooks（会话开始注入上下文、压缩前快照）的插件。详见下方各 host 指南。
 
 ## 集成指南
 
-宿主专属配置指南（Step 6 各 phase 逐步完善）：
+宿主专属配置指南：
 
 - [MCP 能力面](docs/integrations/mcp-surface.zh.md)（快查表）
 - [Hermes Agent](docs/integrations/hermes.zh.md)
 - [Claude Code](docs/integrations/claude-code.zh.md)
 - [Codex CLI](docs/integrations/codex-cli.zh.md)
-- [故障排查](docs/integrations/troubleshooting.zh.md)
+
+每份指南都自带故障排查小节。
 
 ## 面向 AI agent
 
@@ -111,8 +123,8 @@ npm install
 | Host | 注册命令 |
 |---|---|
 | Hermes Agent | `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js` |
-| Claude Code | _Phase 6.6 中，见 [docs/integrations/claude-code.zh.md](docs/integrations/claude-code.zh.md)_ |
-| Codex CLI | _Phase 6.7 中，见 [docs/integrations/codex-cli.zh.md](docs/integrations/codex-cli.zh.md)_ |
+| Claude Code | `claude mcp add --scope user prunemem node /absolute/path/to/PruneMem/src/mcp/bin.js` |
+| Codex CLI | `codex mcp add prunemem -- node /absolute/path/to/PruneMem/src/mcp/bin.js` |
 
 对 Hermes，注册后请验证：
 
@@ -126,7 +138,7 @@ hermes mcp test prunemem
 
 PruneMem 提供 11 个 MCP tool（5 个 read-class + 4 个 single-write + 2 个 composite）。所有写类 tool 默认 `write: false`（dry-run）。完整 tool 目录见 [docs/mcp-tools.md](docs/mcp-tools.md)。
 
-**说明**：PruneMem 当前暴露 11 个 tool，但还**没有明确的 agent 调用策略**（即"agent 应该何时调用哪个 tool"）——这是 Phase 6.5 正在开发的内容。在此之前，agent 可基于 tool description 自行判断调用时机。
+**主动使用**：除了这 11 个原始 tool，PruneMem 还提供 governance skill（`skills/prunemem-memory-governance/SKILL.md`）和 [agent playbook](docs/agent-playbook.md)，指引 agent 何时、如何调用这些 tool。在 Claude Code 和 Codex 上，插件会打包这个 skill 以及生命周期 hooks（会话开始注入上下文、压缩前快照）。配置详见各 host 集成指南。
 
 ## MCP 能力
 
@@ -178,7 +190,7 @@ src/
 └── adapters/      # 模型 provider 与存储后端适配器
 
 docs/
-├── integrations/  # 宿主专属配置指南（占位中）
+├── integrations/  # 宿主专属配置指南（Hermes、Claude Code、Codex）
 ├── mcp-server.md  # MCP 服务器集成指南
 ├── mcp-tools.md   # 完整 tool 参考
 ├── governance.md  # 登记簿治理链
@@ -188,7 +200,8 @@ docs/
 examples/          # 带示例数据的 demo 工作空间
 scripts/           # 验证与演示脚本
 tests/             # 回归与 MCP 测试
-skills/            # 宿主可加载的 skill 定义
+skills/            # governance skill（宿主可加载）
+plugins/           # Claude Code / Codex 插件（skill + 生命周期 hooks）
 ```
 
 ## 关键文档
@@ -202,13 +215,10 @@ skills/            # 宿主可加载的 skill 定义
 
 ## 路线图
 
-v0.3.0 之后的计划：
-
 - npm publish，实现一行命令安装
-- 更深度的宿主集成示例（超出 MCP 协议层）
-- 更多示例工作流（多宿主场景）
 - 跨系统迁移的内存数据导入/导出工具（已规划，无具体版本）
-- 真实场景验证后发布 v1.0.0 稳定版
+- 更多多宿主示例工作流
+- 更广泛的真实场景验证后发布 v1.0.0 稳定版
 
 ## 许可证
 
