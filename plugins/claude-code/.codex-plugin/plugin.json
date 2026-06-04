@@ -1,0 +1,19 @@
+{
+  "name": "prunemem-memory",
+  "version": "0.3.0",
+  "description": "PruneMem memory governance for Codex CLI: agent playbook skill + lifecycle hooks (SessionStart context rebuild, PreCompact snapshot).",
+  "author": {
+    "name": "Wpoithge"
+  },
+  "homepage": "https://github.com/Wpoithge/PruneMem",
+  "repository": "https://github.com/Wpoithge/PruneMem",
+  "license": "MIT",
+  "keywords": ["memory", "mcp", "agent", "context-management", "lifecycle-hooks"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.codex.json",
+  "interface": {
+    "displayName": "PruneMem Memory",
+    "shortDescription": "Memory governance: playbook skill + lifecycle hooks",
+    "category": "Productivity"
+  }
+}

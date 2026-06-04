@@ -20,7 +20,7 @@ import * as maintain from './tools/maintain.js';
 import * as runSamplePipeline from './tools/run-sample-pipeline.js';
 import { validateArgs } from './shared/validate.js';
 
-const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance, repairSourcePaths, updateWorkingState, curatorApply, updateRegistries, maintain, runSamplePipeline];
+export const TOOLS = [archiveSession, runtimeContext, executionPlan, getWorkingState, validateMaintenance, repairSourcePaths, updateWorkingState, curatorApply, updateRegistries, maintain, runSamplePipeline];
 
 export function createServer() {
   const server = new Server(

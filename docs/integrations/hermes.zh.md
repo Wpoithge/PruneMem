@@ -138,7 +138,7 @@ MCP server 作为独立分类,列在 built-in toolsets 之后。
 以查询 workspace 的 runtime context 为例:
 
 ```
-用户: 请用 prunemem_runtime_context 这个 tool 查询 workspace /Users/yang/Tools/prunemem/PruneMem 的 runtime context,preset 用 isolated。
+用户: 请用 prunemem_runtime_context 这个 tool 查询 workspace /Users/<username>/Tools/prunemem/PruneMem 的 runtime context,preset 用 isolated。
 
 Hermes: [调用 prunemem_runtime_context]
 ✓ prunemem_runtime_context 调用成功

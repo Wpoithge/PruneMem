@@ -246,9 +246,9 @@ claude mcp add --scope user prunemem /absolute/path/to/node /absolute/path/to/Pr
 
 接入 PruneMem 后，Claude Code 不会自动使用 `prunemem_*` tool 进行记忆管理。需要用户在对话中**显式提示** Claude Code 使用某个 PruneMem tool。
 
-这是 v0.3.0 的预期行为。Phase 6.5 正在开发调用策略指南（明确 Claude Code 应在何时、如何调用 PruneMem tool）。在此之前，可以在每个会话开头加一句提示，例如：
+这是基础 v0.3.0 MCP 的预期行为。Claude Code 何时、如何调用 PruneMem tool 的主动使用指引，现已由 PruneMem 治理 skill（`skills/prunemem-memory-governance/SKILL.md`）和 agent playbook（`docs/agent-playbook.md`）提供。
 
-> "本次会话使用 PruneMem 管理记忆。会话结束时，请调用 `prunemem_archive_session` 归档对话。"
+**不要**提示 agent 调用 `prunemem_archive_session` 来"归档对话"。`archive_session` 是对已有 session packet 的纯计算：它返回一个 archive 对象、自身不写盘，也**无法**把 live conversation 变成归档。
 
 ### PruneMem MCP server 不响应 SIGINT（Ctrl+C）
 

@@ -1,0 +1,10 @@
+{
+  "name": "prunemem",
+  "plugins": [
+    {
+      "name": "prunemem-memory",
+      "source": { "source": "local", "path": "./plugins/claude-code" },
+      "category": "Productivity"
+    }
+  ]
+}

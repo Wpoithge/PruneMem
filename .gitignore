@@ -12,3 +12,4 @@ tmp/
 examples/workspace/
 .prunemem-isolated/
 .claude/settings.local.json
+docs/research/

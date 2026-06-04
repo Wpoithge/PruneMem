@@ -35,6 +35,7 @@ This repository contains:
 - Working memory and execution context primitives
 - Session archive builder
 - MCP server exposing 11 tools for integration with any MCP-compatible host
+- Host integration assets: a governance skill, an agent playbook, and Claude Code / Codex plugins (lifecycle hooks)
 
 It intentionally **does not** include:
 
@@ -70,21 +71,32 @@ flowchart LR
 
 ## Quick start
 
-> **This section will be filled after Phase 6.4 (Hermes integration test).**
->
-> The author is currently the first real user testing PruneMem against Hermes Agent. Writing a "30-second setup" guide before that test would be guesswork. This section will be written based on actual deployment experience, not assumptions.
->
-> In the meantime, see [docs/mcp-server.md](docs/mcp-server.md) for protocol-level setup. Host-specific integration guides (docs/integrations/) are being written throughout Step 6.
+PruneMem is an MCP server (stdio transport). Clone it, install dependencies, and register it with your host:
+
+```bash
+git clone https://github.com/Wpoithge/PruneMem.git
+cd PruneMem
+npm install
+```
+
+Register with your host (use an absolute path to `bin.js`):
+
+- **Claude Code** — `claude mcp add --scope user prunemem node /absolute/path/to/PruneMem/src/mcp/bin.js`
+- **Codex CLI** — `codex mcp add prunemem -- node /absolute/path/to/PruneMem/src/mcp/bin.js`
+- **Hermes Agent** — `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js`
+
+You should see **11 tools** discovered. For proactive memory governance — guidance on when and how the agent should call these tools — install the governance skill, and on Claude Code / Codex the plugin that also bundles lifecycle hooks (session-start context injection, pre-compact snapshot). See the host-specific guide below.
 
 ## Integration guides
 
-Host-specific setup guides (being written throughout Step 6):
+Host-specific setup guides:
 
 - [MCP capability surface](docs/integrations/mcp-surface.zh.md) (Chinese-only quick reference)
 - [Hermes Agent](docs/integrations/hermes.md)
 - [Claude Code](docs/integrations/claude-code.md)
 - [Codex CLI](docs/integrations/codex-cli.md)
-- [Troubleshooting](docs/integrations/troubleshooting.md)
+
+Each guide includes a troubleshooting section.
 
 ## For AI agents
 
@@ -111,8 +123,8 @@ npm install
 | Host | Registration command |
 |---|---|
 | Hermes Agent | `hermes mcp add prunemem --command node --args /absolute/path/to/PruneMem/src/mcp/bin.js` |
-| Claude Code | _Integration guide coming in Phase 6.6 — see [docs/integrations/claude-code.md](docs/integrations/claude-code.md)_ |
-| Codex CLI | _Integration guide coming in Phase 6.7 — see [docs/integrations/codex-cli.md](docs/integrations/codex-cli.md)_ |
+| Claude Code | `claude mcp add --scope user prunemem node /absolute/path/to/PruneMem/src/mcp/bin.js` |
+| Codex CLI | `codex mcp add prunemem -- node /absolute/path/to/PruneMem/src/mcp/bin.js` |
 
 For Hermes, after registration, verify with:
 
@@ -126,7 +138,7 @@ Expected output: `✓ Connected` and `Tools discovered: 11`.
 
 PruneMem provides 11 MCP tools (5 read-class + 4 single-write + 2 composite). All write-class tools default to `write: false` (dry-run). See [docs/mcp-tools.md](docs/mcp-tools.md) for the complete tool catalog.
 
-**Note**: PruneMem currently exposes its 11 tools but does not yet have an explicit usage strategy for "how the agent should call them" — this is in development (Phase 6.5). Until then, agents may call PruneMem tools at their own discretion based on tool descriptions.
+**Proactive usage**: Beyond the raw 11 tools, PruneMem ships a governance skill (`skills/prunemem-memory-governance/SKILL.md`) and an [agent playbook](docs/agent-playbook.md) that guide when and how an agent should call the tools. On Claude Code and Codex, a plugin bundles this skill plus lifecycle hooks (session-start context injection, pre-compact snapshot). See the host integration guides for setup.
 
 ## MCP capabilities
 
@@ -178,7 +190,7 @@ src/
 └── adapters/      # Model provider and storage backend adapters
 
 docs/
-├── integrations/  # Host-specific setup guides (placeholders)
+├── integrations/  # Host-specific setup guides (Hermes, Claude Code, Codex)
 ├── mcp-server.md  # MCP server integration guide
 ├── mcp-tools.md   # Complete tool reference
 ├── governance.md  # Registry governance chain
@@ -188,7 +200,8 @@ docs/
 examples/          # Demo workspace with sample data
 scripts/           # Validation and demo scripts
 tests/             # Regression and MCP tests
-skills/            # Host-loadable skill definitions
+skills/            # Governance skill (host-loadable)
+plugins/           # Claude Code / Codex plugins (skill + lifecycle hooks)
 ```
 
 ## Key docs
@@ -202,13 +215,10 @@ skills/            # Host-loadable skill definitions
 
 ## Roadmap
 
-After v0.3.0 ships:
-
 - npm publish for one-line installation
-- Deeper host integration examples (beyond MCP protocol)
-- More example workflows (multi-host scenarios)
 - Memory data import/export tooling for cross-system migration (planned, no specific version)
-- v1.0.0 stable release after real-world validation
+- More multi-host example workflows
+- v1.0.0 stable release after broader real-world validation
 
 ## License
 

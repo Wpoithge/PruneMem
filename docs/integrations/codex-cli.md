@@ -146,7 +146,7 @@ Codex CLI does not add visible prefixes to MCP tool names in conversation. Tools
 - `prunemem_curator_apply`
 - (and the remaining tools)
 
-Internally, at the API level, Codex CLI references tools as `prunemem.prunemem_runtime_context` (server name + tool name), but you use the short name in conversation.
+Internally, tools are namespaced by server — references typically take the form `<server>.<tool>` — but you use the short name in conversation.
 
 You can ask Codex CLI "what tools does the prunemem MCP server provide?" and it will list them.
 
@@ -160,7 +160,7 @@ PruneMem is designed to be safe by default. For full details, see [README — Sa
 - **isolated preset**: passing `preset: "isolated"` redirects all writes to a `.prunemem-isolated/` sandbox directory
 - **F3 warning**: `prunemem_run_sample_pipeline` writes `.generated.json` intermediate files even when `write: false` — use `preset: "isolated"` if you want to avoid touching your real workspace
 
-Codex CLI's own sandbox configuration (the `[sandbox]` section in `~/.codex/config.toml`) can further restrict the filesystem paths PruneMem can access. In testing, the default sandbox did not block PruneMem read operations.
+Codex CLI's own sandbox configuration (the `[sandbox]` section in `~/.codex/config.toml`) can further restrict the filesystem paths PruneMem can access. In testing with the default sandbox mode, PruneMem read operations were not blocked.
 
 ---
 
@@ -241,13 +241,13 @@ For full error handling documentation, see [docs/mcp-server.md](../mcp-server.md
 
 After integrating PruneMem, Codex CLI does not automatically use `prunemem_*` tools for memory management. You need to explicitly prompt Codex CLI to call a specific PruneMem tool in your conversation.
 
-This is expected behavior in v0.3.0. A usage strategy guide (specifying when and how Codex CLI should call PruneMem tools) is in development in Phase 6.5. The guide will be delivered as a `SKILL.md` that integrates with Codex CLI's native skill system. Until then, you can include a session-opening prompt such as:
+This is expected behavior in the base v0.3.0 MCP. Proactive usage guidance — when and how Codex CLI should call PruneMem tools — is now provided by the PruneMem governance skill (`skills/prunemem-memory-governance/SKILL.md`) and the agent playbook (`docs/agent-playbook.md`).
 
-> "This session uses PruneMem for memory governance. At the end of our session, please call `prunemem_archive_session` to archive the conversation."
+Do **not** prompt the agent to call `prunemem_archive_session` to "archive the conversation." `archive_session` is pure computation over an existing session packet: it returns an archive object, writes nothing on its own, and cannot turn a live conversation into an archive.
 
 ### PruneMem MCP server does not respond to SIGINT (Ctrl+C)
 
-When running `node src/mcp/bin.js` manually in a terminal for testing, pressing `Ctrl+C` does not exit the process.
+When running `node src/mcp/bin.js` manually in a terminal for testing, pressing `Ctrl+C` does not exit the process. This is common behavior for Node.js stdio-based MCP servers, not specific to PruneMem.
 
 Workarounds:
 - `Ctrl+\` (SIGQUIT)

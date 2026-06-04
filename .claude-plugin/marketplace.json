@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "prunemem",
+  "description": "PruneMem memory governance — agent playbook, MCP server, and lifecycle hooks for Claude Code",
+  "owner": {
+    "name": "Wpoithge",
+    "email": "wpoithge@users.noreply.github.com"
+  },
+  "plugins": [
+    {
+      "name": "prunemem-memory",
+      "description": "PruneMem agent playbook + Claude Code lifecycle hooks (SessionStart / PreCompact / SessionEnd / PostToolUse). Provides the prunemem-memory-governance skill and lifecycle hooks that snapshot working state before context compaction and rebuild context on session start.",
+      "author": { "name": "Wpoithge" },
+      "category": "productivity",
+      "source": "./plugins/claude-code",
+      "homepage": "https://github.com/Wpoithge/PruneMem",
+      "keywords": ["memory", "mcp", "agent", "context"]
+    }
+  ]
+}
