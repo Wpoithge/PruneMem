@@ -1,6 +1,6 @@
 # Overview
 
-PruneMem is a structured memory plugin that now publicly exposes the architecture through **Memory V4.1** without exposing private runtime data.
+PruneMem is a structured memory governance system that now publicly exposes the architecture through **Memory V4.1** without exposing private runtime data.
 
 It combines:
 

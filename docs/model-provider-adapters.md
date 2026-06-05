@@ -4,7 +4,7 @@ LLM providers are intentionally decoupled from the PruneMem core.
 
 ## Why this matters
 
-A public memory plugin should not hard-code one vendor or one private deployment.
+A public memory system should not hard-code one vendor or one private deployment.
 
 Examples of supported directions include:
 - Alibaba Cloud Bailian

@@ -29,5 +29,5 @@ That is why the V4/V4.1 materials in this repository are:
 
 - rewritten into generic schemas and contracts
 - backed by synthetic examples
-- portable across OpenClaw-style runtimes
+- portable across MCP-compatible host runtimes
 - free of personal path/account/workspace leakage
