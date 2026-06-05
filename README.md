@@ -46,9 +46,9 @@ It intentionally **does not** include:
 
 ## Current release status
 
-**Current version: `0.3.0`**
+**Current version: `0.4.0`**
 
-MCP server support makes PruneMem usable as a standard MCP tool server from any compatible host.
+Building on the v0.3.0 MCP server, this release adds field-tested host integration for Hermes, Claude Code, and Codex: a governance skill, plugins with lifecycle hooks, and a thin CLI.
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
 
@@ -102,7 +102,7 @@ Each guide includes a troubleshooting section.
 
 If you are an AI agent helping a user integrate PruneMem with their host, this section is for you.
 
-PruneMem is an **MCP server** with **stdio transport**. It is not a Python package, npm package, or CLI tool.
+PruneMem is an **MCP server** with **stdio transport** — that is how hosts integrate it. It also ships a thin `prunemem` CLI (list and invoke tools directly, for testing/scripting), but the CLI is not the integration path. It is not a Python package and is not yet published to npm.
 
 ### Prerequisites
 

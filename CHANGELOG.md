@@ -8,6 +8,38 @@ For the complete git history, see the [GitHub commit log](https://github.com/Wpo
 
 ---
 
+## v0.4.0 — Host integration & agent-proactive governance
+
+**Status:** Code complete and tested; sanitized and public-safe for open-source release.
+
+### Direction
+
+v0.3.0 shipped the MCP server. v0.4.0 makes PruneMem usable *in practice*: the host integration guides that were work-in-progress in v0.3.0 are now complete and field-tested, and PruneMem gains agent-proactive governance — a skill and lifecycle hooks that guide *when and how* an agent should call the memory tools, instead of leaving it to ad-hoc discretion.
+
+### Added
+
+- **Host integration guides** (bilingual), each based on real testing: Hermes Agent v0.13.0, Claude Code 2.1.143, Codex CLI 0.130.0
+- **Governance skill** (`skills/prunemem-memory-governance/`) — when/how to call the 11 tools; loadable by Hermes, bundled in the plugins
+- **Claude Code / Codex plugins** (`plugins/claude-code/`) — the governance skill plus lifecycle hooks: session-start context injection, pre-compact snapshot, session-end, post-tool-use
+- **`prunemem` CLI** (`src/cli/`) — list and invoke the MCP tools directly (`prunemem list-tools`, `prunemem call <tool>`), for testing and scripting
+- **Agent playbook** (`docs/agent-playbook.md`) — host-agnostic proactive-governance playbook
+- **Skill drift sentinel** (`tests/unit/skill-consistency.test.js`) — keeps the Hermes and plugin copies of the skill byte-identical
+- Self-documenting `update_working_state` tool description
+
+### Changed
+
+- Repository sanitized for public release (machine-specific paths/usernames → placeholders; internal research notes removed from version control)
+- README refreshed: real quick-start and per-host registration commands, accurate roadmap and repo layout
+
+### Resolves from v0.3.0 "work in progress"
+
+- Hermes / Claude Code / Codex CLI integration guides — done
+- Hermes field-test-derived SKILL.md — done (generalized into the governance skill)
+
+Cross-host troubleshooting guide remains planned; each host guide currently carries its own troubleshooting section.
+
+---
+
 ## v0.3.0 — MCP integration
 
 **Status:** Code complete and tested (15/15 regression + 44/44 MCP tests passing). Host-specific integration guides (Hermes, Claude Code, Codex CLI) are work-in-progress; see [Roadmap](README.md#roadmap) for what's still being filled in.

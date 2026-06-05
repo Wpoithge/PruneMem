@@ -1,6 +1,6 @@
 {
   "name": "prunemem-memory",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "PruneMem memory governance for Codex CLI: agent playbook skill + lifecycle hooks (SessionStart context rebuild, PreCompact snapshot).",
   "author": {
     "name": "Wpoithge"

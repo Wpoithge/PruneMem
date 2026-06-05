@@ -1,7 +1,7 @@
 ---
 name: prunemem-memory-governance
 description: Use when the user records, updates, saves, or reviews PruneMem working state or task progress (e.g. "记录进展", "更新工作状态", "把进展记录进工作状态", "record progress", "update working state"), starts a session, switches tasks, completes milestones, reaches context capacity, or asks to remember/summarize/archive. Covers all 11 prunemem_* tools; reads can be invoked autonomously, writes require user confirmation.
-version: 0.3.0
+version: 0.4.0
 author: Wpoithge
 license: MIT
 platforms: [linux, macos, windows]

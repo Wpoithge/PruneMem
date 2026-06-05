@@ -1,7 +1,7 @@
 import { TOOLS } from '../mcp/server.js';
 import { validateArgs } from '../mcp/shared/validate.js';
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 
 function printHelp() {
   console.log(`prunemem ${VERSION}

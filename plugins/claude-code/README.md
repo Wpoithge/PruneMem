@@ -90,7 +90,7 @@ variable for normal use.
 
 ## Status
 
-This is a v0.3.0 plugin. Hook implementations land in stages
+This is a v0.4.0 plugin. Hook implementations land in stages
 (Steps 6.5.2-B through 6.5.2-E). Current state:
 
 - [x] Skeleton (6.5.2-A)

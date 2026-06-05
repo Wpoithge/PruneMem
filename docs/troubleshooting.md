@@ -14,4 +14,4 @@ not live runtime state. Consequences:
   `PRUNEMEM_PRESET=isolated` to redirect writes (with caveats — see plugin
   README)
 
-This is PruneMem v0.3.0 behavior, tracked as design feedback for v0.4.
+This is current PruneMem behavior (v0.3.0–v0.4.0), tracked as design feedback for a future release.

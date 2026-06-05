@@ -26,7 +26,7 @@ function run(args) {
 {
   const res = run(['--version']);
   assert(res.status === 0, `version exit code should be 0, got ${res.status}`);
-  assert(res.stdout.trim() === '0.3.0', `version output should be 0.3.0, got ${res.stdout.trim()}`);
+  assert(res.stdout.trim() === '0.4.0', `version output should be 0.4.0, got ${res.stdout.trim()}`);
   console.log('PASS: --version');
 }
 

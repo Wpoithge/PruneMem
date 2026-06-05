@@ -1,7 +1,7 @@
 {
   "name": "prunemem-memory",
   "description": "PruneMem memory governance for Claude Code: agent playbook skill + lifecycle hooks for context snapshot/rebuild and working state management",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Wpoithge"
   },

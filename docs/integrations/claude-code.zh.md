@@ -21,7 +21,7 @@ PruneMem 是一个记忆治理系统，可以作为 MCP server 接入 Claude Cod
 ### Step 1 — clone PruneMem
 
 ```bash
-git clone --branch v0.3.0 https://github.com/Wpoithge/PruneMem.git ~/Tools/prunemem
+git clone --branch v0.4.0 https://github.com/Wpoithge/PruneMem.git ~/Tools/prunemem
 cd ~/Tools/prunemem
 ```
 

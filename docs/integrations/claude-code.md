@@ -21,7 +21,7 @@ This document is for **engineers** who want to integrate PruneMem into Claude Co
 ### Step 1 — Clone PruneMem
 
 ```bash
-git clone --branch v0.3.0 https://github.com/Wpoithge/PruneMem.git ~/Tools/prunemem
+git clone --branch v0.4.0 https://github.com/Wpoithge/PruneMem.git ~/Tools/prunemem
 cd ~/Tools/prunemem
 ```
 

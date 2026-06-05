@@ -46,9 +46,9 @@ PruneMem 不替代你的向量存储或检索机制。它坐在更上游：你�
 
 ## 当前版本状态
 
-**当前版本：`0.3.0`**
+**当前版本：`0.4.0`**
 
-新增 MCP 服务器支持，让 PruneMem 可以作为标准 MCP tool 服务器被任何兼容宿主使用。
+在 v0.3.0 的 MCP server 之上，本次发布新增经实测的宿主集成（Hermes、Claude Code、Codex）：governance skill、带生命周期 hooks 的插件，以及一个轻量 CLI。
 
 版本历史见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -102,7 +102,7 @@ npm install
 
 如果你是协助用户接入 PruneMem 的 AI agent，本节针对你而写。
 
-PruneMem 是一个 **MCP server**，使用 **stdio transport**。它不是 Python 包、不是 npm 包、不是 CLI 工具。
+PruneMem 是一个 **MCP server**，使用 **stdio transport**——宿主就是把它作为 MCP server 接入的。它也带一个轻量 `prunemem` CLI（直接列出/调用 tool，便于测试和脚本），但 CLI 不是接入方式。它不是 Python 包，目前也还没发布到 npm。
 
 ### 前置条件
 
