@@ -62,7 +62,7 @@ flowchart LR
     D --> E[Layered storage<br/>L0 / L1 / L2 / L3]
     E --> F[Working memory]
     F --> G[Runtime context]
-    G --> H[Agent turn<br/>(host responsibility)]
+    G --> H["Agent turn<br/>(host responsibility)"]
     E --> I[Curator apply<br/>merge / expire / validate]
     I --> E
 ```
