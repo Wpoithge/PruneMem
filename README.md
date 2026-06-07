@@ -24,7 +24,7 @@ PruneMem treats agent memory as an infrastructure layer with three core ideas:
 - **State** — Working memory and runtime context for active session continuity
 - **Lifecycle** — Automated governance (merge, expire, validate, repair) so the memory layer stays clean over time
 
-PruneMem does not replace your vector store or retrieval mechanism. It sits upstream: you feed it session transcripts or facts, it judges what to keep and where to put it, and it maintains the registries that your retrieval layer can query.
+PruneMem does not replace your vector store or retrieval mechanism — it sits upstream of it. You feed PruneMem session transcripts or facts; it judges what to keep and where to put it, and maintains clean, deduplicated, lifecycle-managed registries. **At query time, you bring your own retrieval**: point a vector store or search index (for example, QMD) at the files PruneMem maintains, and query them however your host already does. In short — PruneMem owns *governance* (what to keep, where, for how long); your retrieval layer owns *recall*.
 
 ## What's in this repo
 

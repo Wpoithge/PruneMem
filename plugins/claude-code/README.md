@@ -67,7 +67,7 @@ write target depends on `PRUNEMEM_PRESET`:
   `<workspace>/.prunemem-isolated/working-memory/`. Note: in isolated mode,
   PruneMem reads `base` from `examples/` but writes to `.prunemem-isolated/`,
   which means hook writes do NOT accumulate across calls (this is a known
-  PruneMem v0.3.0 design).
+  PruneMem design choice).
 
 ### Hook execution trace (default off, opt-in for diagnostics)
 
@@ -90,11 +90,9 @@ variable for normal use.
 
 ## Status
 
-This is a v0.4.0 plugin. Hook implementations land in stages
-(Steps 6.5.2-B through 6.5.2-E). Current state:
+This is a v0.4.0 plugin. All lifecycle hooks are implemented:
 
-- [x] Skeleton (6.5.2-A)
-- [ ] SessionStart implementation (6.5.2-B)
-- [ ] PreCompact implementation (6.5.2-C)
-- [ ] SessionEnd implementation (6.5.2-D)
-- [x] PostToolUse implementation (6.5.2-E)
+- [x] SessionStart — reads previous working state + pre-compact snapshot, injects context
+- [x] PreCompact — snapshots runtime context before compaction
+- [x] SessionEnd — persists working state, runs maintenance validation
+- [x] PostToolUse — appends completed steps per file edit (opt-in via `PRUNEMEM_ENABLE_POSTTOOL=1`)

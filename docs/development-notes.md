@@ -102,7 +102,7 @@ codex plugin marketplace add <repo>
 codex plugin add prunemem-memory@prunemem
 ```
 
-Installation **copies** to `~/.codex/plugins/cache/.../0.3.0/`. After modifying source, **must remove+add to refresh cache** (version unchanged → `add` alone does not auto-refresh; remove+add forces refresh — confirmed via testing).
+Installation **copies** to `~/.codex/plugins/cache/.../0.4.0/`. After modifying source, **must remove+add to refresh cache** (version unchanged → `add` alone does not auto-refresh; remove+add forces refresh — confirmed via testing).
 
 ### Claude Code vs Codex platform differences
 
